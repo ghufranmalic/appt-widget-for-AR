@@ -10,15 +10,12 @@ const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 
 const WEEKDAY_SLOTS: AppointmentSlot[] = [
   { label: "10:00 AM", hour: 10, minute: 0 },
-  { label: "12:00 PM", hour: 12, minute: 0 },
   { label: "2:00 PM", hour: 14, minute: 0 },
-  { label: "4:00 PM", hour: 16, minute: 0 },
-  { label: "6:30 PM", hour: 18, minute: 30 },
+  { label: "6:00 PM", hour: 18, minute: 0 },
 ];
 
 const SATURDAY_SLOTS: AppointmentSlot[] = [
   { label: "9:00 AM", hour: 9, minute: 0 },
-  { label: "11:00 AM", hour: 11, minute: 0 },
   { label: "1:00 PM", hour: 13, minute: 0 },
 ];
 

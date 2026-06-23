@@ -39,6 +39,11 @@ function nextBusinessDayFrom(dayIndex: number): number {
   return candidate === 0 ? 1 : candidate;
 }
 
+function followingBusinessDayAfterNextDay(dayIndex: number): number {
+  const nextDay = (dayIndex + 1) % 7;
+  return nextBusinessDayFrom(nextDay);
+}
+
 export function getBusinessStatus(current: Pick<ETDateTimeParts, "dayIndex" | "hour" | "minute">): BusinessStatus {
   const currentMinutes = minutesSinceMidnight(current);
 
@@ -91,9 +96,9 @@ export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" 
       severity = "normal";
       reason = "Normal weekday request during business hours allows next-day booking.";
     } else {
-      dayIndex = nextBusinessDayFrom(current.dayIndex);
+      dayIndex = followingBusinessDayAfterNextDay(current.dayIndex);
       severity = "limited";
-      reason = "After-hours requests move forward to the next valid business day.";
+      reason = "After-hours weekday requests cannot offer same-day or next-day booking; earliest allowed is the following business day.";
     }
   } else {
     dayIndex = 2;

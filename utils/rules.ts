@@ -45,7 +45,7 @@ export function getBusinessStatus(current: Pick<ETDateTimeParts, "dayIndex" | "h
   const currentMinutes = minutesSinceMidnight(current);
 
   if (current.dayIndex >= 1 && current.dayIndex <= 5) {
-    return currentMinutes >= 10 * 60 && currentMinutes <= 19 * 60 + 30 ? "OPEN" : "CLOSED";
+    return currentMinutes >= 8 * 60 && currentMinutes <= 18 * 60 ? "OPEN" : "CLOSED";
   }
 
   if (current.dayIndex === 6) {

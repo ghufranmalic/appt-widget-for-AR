@@ -5,19 +5,22 @@
 html,
 body,
 #root {
-  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  width: fit-content;
+  min-width: 0;
+  height: fit-content;
+  min-height: 0;
+  overflow: hidden;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  background: #eef2f5;
+  background: transparent;
 }
 
 .testShell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
   margin: 0;
   padding: 0;
+  width: fit-content;
+  height: fit-content;
 }

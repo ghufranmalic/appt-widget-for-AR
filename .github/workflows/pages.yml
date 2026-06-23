@@ -35,6 +35,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Move built entry to Pages root
+        run: cp dist/src/index.html dist/index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

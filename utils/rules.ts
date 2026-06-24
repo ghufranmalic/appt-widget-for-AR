@@ -19,6 +19,11 @@ const SATURDAY_SLOTS: AppointmentSlot[] = [
   { label: "1:00 PM", hour: 13, minute: 0 },
 ];
 
+const WEEKDAY_OPEN_MINUTES = 8 * 60;
+const WEEKDAY_CLOSE_MINUTES = 17 * 60;
+const SATURDAY_OPEN_MINUTES = 9 * 60;
+const SATURDAY_CLOSE_MINUTES = 13 * 60;
+
 function minutesSinceMidnight(state: Pick<ETDateTimeParts, "hour" | "minute">): number {
   return state.hour * 60 + state.minute;
 }
@@ -45,11 +50,11 @@ export function getBusinessStatus(current: Pick<ETDateTimeParts, "dayIndex" | "h
   const currentMinutes = minutesSinceMidnight(current);
 
   if (current.dayIndex >= 1 && current.dayIndex <= 5) {
-    return currentMinutes >= 8 * 60 && currentMinutes <= 18 * 60 ? "OPEN" : "CLOSED";
+    return currentMinutes >= WEEKDAY_OPEN_MINUTES && currentMinutes <= WEEKDAY_CLOSE_MINUTES ? "OPEN" : "CLOSED";
   }
 
   if (current.dayIndex === 6) {
-    return currentMinutes >= 9 * 60 && currentMinutes <= 13 * 60 ? "OPEN" : "CLOSED";
+    return currentMinutes >= SATURDAY_OPEN_MINUTES && currentMinutes <= SATURDAY_CLOSE_MINUTES ? "OPEN" : "CLOSED";
   }
 
   return "CLOSED";
@@ -69,6 +74,8 @@ export function getSlots(dayIndex: number): AppointmentSlot[] {
 
 export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" | "hour" | "minute">): NextAppointmentDay {
   const status = getBusinessStatus(current);
+  const currentMinutes = minutesSinceMidnight(current);
+  const isBeforeWeekdayOpening = currentMinutes < WEEKDAY_OPEN_MINUTES;
   let dayIndex: number;
   let severity: BookingSeverity;
   let reason: string;
@@ -78,6 +85,10 @@ export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" 
       dayIndex = 6;
       severity = "limited";
       reason = "Friday requests during business hours can only offer Saturday appointments.";
+    } else if (isBeforeWeekdayOpening) {
+      dayIndex = 6;
+      severity = "limited";
+      reason = "Friday before opening can offer next-day Saturday appointments.";
     } else {
       dayIndex = 2;
       severity = "restricted";
@@ -92,6 +103,10 @@ export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" 
       dayIndex = nextBusinessDayFrom(current.dayIndex);
       severity = "normal";
       reason = "Normal weekday request during business hours allows next-day booking.";
+    } else if (isBeforeWeekdayOpening) {
+      dayIndex = nextBusinessDayFrom(current.dayIndex);
+      severity = "limited";
+      reason = "Before-hours weekday requests can offer next-day appointments.";
     } else {
       dayIndex = followingBusinessDayAfterNextDay(current.dayIndex);
       severity = "limited";

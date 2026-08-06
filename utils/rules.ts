@@ -14,13 +14,13 @@ const WEEKDAY_SLOTS: AppointmentSlot[] = [
   { label: "6:00 PM", hour: 18, minute: 0 },
 ];
 
-const FRIDAY_SLOTS: AppointmentSlot[] = [
+const MONDAY_SLOTS: AppointmentSlot[] = [
+  { label: "2:00 PM", hour: 14, minute: 0 },
   { label: "6:00 PM", hour: 18, minute: 0 },
 ];
 
-const SATURDAY_SLOTS: AppointmentSlot[] = [
-  { label: "9:00 AM", hour: 9, minute: 0 },
-  { label: "1:00 PM", hour: 13, minute: 0 },
+const FRIDAY_SLOTS: AppointmentSlot[] = [
+  { label: "6:00 PM", hour: 18, minute: 0 },
 ];
 
 const WEEKDAY_OPEN_MINUTES = 8 * 60;
@@ -65,16 +65,16 @@ export function getBusinessStatus(current: Pick<ETDateTimeParts, "dayIndex" | "h
 }
 
 export function getSlots(dayIndex: number): AppointmentSlot[] {
-  if (isNormalWeekday(dayIndex)) {
+  if (dayIndex === 1) {
+    return [...MONDAY_SLOTS];
+  }
+
+  if (dayIndex >= 2 && dayIndex <= 4) {
     return [...WEEKDAY_SLOTS];
   }
 
   if (dayIndex === 5) {
     return [...FRIDAY_SLOTS];
-  }
-
-  if (dayIndex === 6) {
-    return [...SATURDAY_SLOTS];
   }
 
   return [];

@@ -23,11 +23,6 @@ const FRIDAY_SLOTS: AppointmentSlot[] = [
   { label: "6:00 PM", hour: 18, minute: 0 },
 ];
 
-const SATURDAY_SLOTS: AppointmentSlot[] = [
-  { label: "9:00 AM", hour: 9, minute: 0 },
-  { label: "1:00 PM", hour: 13, minute: 0 },
-];
-
 const WEEKDAY_OPEN_MINUTES = 8 * 60;
 const WEEKDAY_CLOSE_MINUTES = 17 * 60;
 const SATURDAY_OPEN_MINUTES = 9 * 60;
@@ -56,10 +51,10 @@ function followingBusinessDayAfterNextDay(dayIndex: number): number {
 }
 
 const TUESDAY_RESTRICTED_AGENT_NOTE =
-  "Do not offer Saturday appointments (9:00 AM or 1:00 PM) during this period.";
+  "Do not offer Saturday appointments during this period.";
 
 const TUESDAY_RESTRICTED_REASON =
-  "From Friday after-hours through Monday morning, Saturday appointment slots cannot be offered; skip the weekend and Monday—earliest allowed is Tuesday.";
+  "From Friday after-hours through Monday morning, Saturday appointments are not available; skip the weekend and Monday—earliest allowed is Tuesday.";
 
 function formatSlotLabels(slots: AppointmentSlot[]): string {
   return slots.map((slot) => slot.label).join(", ");
@@ -113,10 +108,6 @@ export function getSlots(dayIndex: number): AppointmentSlot[] {
     return [...FRIDAY_SLOTS];
   }
 
-  if (dayIndex === 6) {
-    return [...SATURDAY_SLOTS];
-  }
-
   return [];
 }
 
@@ -137,10 +128,9 @@ export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" 
   } else if (current.dayIndex === 5) {
     dayIndex = 6;
     severity = "limited";
-    const saturdaySlots = formatSlotLabels(SATURDAY_SLOTS);
     reason = status === "OPEN"
-      ? `Friday requests during business hours can only offer Saturday appointments (${saturdaySlots}).`
-      : `Friday before opening can offer next-day Saturday appointments (${saturdaySlots}).`;
+      ? "Friday requests during business hours can only offer Saturday appointments."
+      : "Friday before opening can offer next-day Saturday appointments.";
   } else if (isNormalWeekday(current.dayIndex)) {
     if (status === "OPEN") {
       dayIndex = nextBusinessDayFrom(current.dayIndex);

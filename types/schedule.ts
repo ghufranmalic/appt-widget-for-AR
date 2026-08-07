@@ -30,6 +30,7 @@ export interface WeekSchedule {
   label: string;
   startDate: string;
   endDate: string;
+  dates?: string[];
   rules: ScheduleRule[];
 }
 

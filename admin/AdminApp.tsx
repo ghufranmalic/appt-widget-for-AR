@@ -15,7 +15,7 @@ import {
   loadAdminSettings,
   saveAdminSettings,
 } from "../utils/adminSettings";
-import { MonthScheduleBoard } from "./MonthBoard";
+import { CalendarBoard } from "./CalendarBoard";
 
 type AdminTab = "hours" | "weeks" | "publish" | "settings";
 
@@ -130,7 +130,7 @@ export function AdminApp() {
         <div className={`admin-status ${statusType}`}>{status}</div>
       )}
 
-      {tab === "weeks" && <MonthScheduleBoard config={config} onChange={updateConfig} />}
+      {tab === "weeks" && <CalendarBoard config={config} onChange={updateConfig} />}
 
       {tab === "hours" && (
         <section className="admin-card">

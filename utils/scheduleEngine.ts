@@ -20,6 +20,14 @@ function isDateInRange(isoDate: string, startDate: string, endDate: string): boo
   return isoDate >= startDate && isoDate <= endDate;
 }
 
+function weekContainsDate(week: { startDate: string; endDate: string; dates?: string[] }, isoDate: string): boolean {
+  if (week.dates?.length) {
+    return week.dates.includes(isoDate);
+  }
+
+  return isDateInRange(isoDate, week.startDate, week.endDate);
+}
+
 function matchesTimeCondition(
   rule: ScheduleRule,
   current: Pick<ETDateTimeParts, "hour" | "minute">,
@@ -136,7 +144,7 @@ export function getNextAppointmentDayFromSchedule(
   current: ETDateTimeParts,
   config: ScheduleConfig,
 ): NextAppointmentDay | null {
-  const activeWeek = config.weeks.find((week) => isDateInRange(current.isoDate, week.startDate, week.endDate));
+  const activeWeek = config.weeks.find((week) => weekContainsDate(week, current.isoDate));
 
   if (!activeWeek) {
     return null;

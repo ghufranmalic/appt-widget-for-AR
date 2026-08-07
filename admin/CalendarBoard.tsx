@@ -250,21 +250,33 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
         </div>
 
         <aside className="calendar-panel">
-          <h3>Day rules</h3>
+          <h3>Appointment rules</h3>
           {selectedDates.length === 0 ? (
-            <p className="admin-note">
-              Select one or more dates on the calendar. For each day you pick, you can set which appointment date
-              agents should offer when a call comes in that day.
-            </p>
+            <div className="calendar-panel-empty">
+              <p className="admin-note">
+                <strong>How it works:</strong> pick a date on the calendar, then choose which appointment date the
+                widget should offer when a customer calls on that day.
+              </p>
+              <ol className="calendar-steps">
+                <li>Click a day on the calendar (blue highlight)</li>
+                <li>Set the <strong>offer date</strong> in the panel that appears here</li>
+                <li>Click <strong>Save rules</strong>, then go to <strong>Publish</strong></li>
+              </ol>
+            </div>
           ) : (
             <>
+              <div className="calendar-how-to">
+                <strong>Set the rule for each selected day below.</strong>
+                <p>
+                  Example: if someone calls on <em>{formatDayHeading(selectedDates[0])}</em>, which appointment date
+                  should agents offer?
+                </p>
+              </div>
+
               <div className="calendar-panel-intro">
                 <p className="calendar-selection-summary">
                   <strong>{formatSelectionLabel(selectedDates)}</strong>
                   <span>{selectedDates.length} day(s) selected</span>
-                </p>
-                <p className="admin-note">
-                  Define what the widget should offer when a customer calls on each selected day.
                 </p>
               </div>
 
@@ -281,87 +293,99 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
 
                   return (
                     <article key={entry.isoDate} className="day-rule-card">
-                      <header className="day-rule-card-header">
-                        <div>
-                          <span className="day-rule-call-label">When call comes in on</span>
+                      <div className="day-rule-flow">
+                        <div className="day-rule-flow-step">
+                          <span className="day-rule-step-label">If call comes in on</span>
                           <strong>{formatDayHeading(entry.isoDate)}</strong>
                         </div>
+                        <div className="day-rule-flow-arrow" aria-hidden="true">
+                          →
+                        </div>
+                        <div className="day-rule-flow-step day-rule-flow-step-offer">
+                          <span className="day-rule-step-label">Offer appointment on</span>
+                          <input
+                            type="date"
+                            value={entry.targetDate}
+                            onChange={(event) =>
+                              updateDayRule(entry.isoDate, { targetDate: event.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <p className="day-rule-preview">
+                        Widget will offer <strong>{formatDayHeading(entry.targetDate)}</strong> when calls come in on{" "}
+                        <strong>{formatDayHeading(entry.isoDate)}</strong>.
+                      </p>
+
+                      <details className="day-rule-advanced">
+                        <summary>More options (time window &amp; slots)</summary>
+
+                        <label className="day-rule-field">
+                          <span>Call time window</span>
+                          <select
+                            value={timeConditionKey(entry)}
+                            onChange={(event) => {
+                              const option = TIME_CONDITION_OPTIONS.find(
+                                (item) => `${item.value}:${item.time ?? ""}` === event.target.value,
+                              );
+                              if (!option) {
+                                return;
+                              }
+
+                              updateDayRule(entry.isoDate, {
+                                timeCondition: option.value,
+                                time: option.time,
+                              });
+                            }}
+                          >
+                            {TIME_CONDITION_OPTIONS.map((option) => (
+                              <option
+                                key={`${option.value}:${option.time ?? ""}`}
+                                value={`${option.value}:${option.time ?? ""}`}
+                              >
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <div className="day-rule-field">
+                          <span>Appointment slots (optional)</span>
+                          <div className="slot-checkboxes day-rule-slots">
+                            {SLOT_OPTIONS.map((slot) => (
+                              <label key={slot.value}>
+                                <input
+                                  type="checkbox"
+                                  checked={entry.slots?.includes(slot.value) ?? false}
+                                  onChange={() => {
+                                    const currentSlots = entry.slots ?? [];
+                                    const slots = currentSlots.includes(slot.value)
+                                      ? currentSlots.filter((value) => value !== slot.value)
+                                      : [...currentSlots, slot.value];
+
+                                    updateDayRule(entry.isoDate, {
+                                      slots: slots.length > 0 ? slots : undefined,
+                                    });
+                                  }}
+                                />
+                                {slot.label}
+                              </label>
+                            ))}
+                          </div>
+                          <span className="day-rule-hint">
+                            Leave unchecked to use default {DAY_LABELS[dayKey]} slots from Business Hours.
+                          </span>
+                        </div>
+
                         <button
                           type="button"
                           className="day-rule-reset"
                           onClick={() => resetDayRule(entry.isoDate)}
                         >
-                          Reset
+                          Reset this day to defaults
                         </button>
-                      </header>
-
-                      <label className="day-rule-field">
-                        <span>Offer appointment on</span>
-                        <input
-                          type="date"
-                          value={entry.targetDate}
-                          onChange={(event) =>
-                            updateDayRule(entry.isoDate, { targetDate: event.target.value })
-                          }
-                        />
-                      </label>
-
-                      <label className="day-rule-field">
-                        <span>Call time window</span>
-                        <select
-                          value={timeConditionKey(entry)}
-                          onChange={(event) => {
-                            const option = TIME_CONDITION_OPTIONS.find(
-                              (item) => `${item.value}:${item.time ?? ""}` === event.target.value,
-                            );
-                            if (!option) {
-                              return;
-                            }
-
-                            updateDayRule(entry.isoDate, {
-                              timeCondition: option.value,
-                              time: option.time,
-                            });
-                          }}
-                        >
-                          {TIME_CONDITION_OPTIONS.map((option) => (
-                            <option
-                              key={`${option.value}:${option.time ?? ""}`}
-                              value={`${option.value}:${option.time ?? ""}`}
-                            >
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <div className="day-rule-field">
-                        <span>Appointment slots (optional)</span>
-                        <div className="slot-checkboxes day-rule-slots">
-                          {SLOT_OPTIONS.map((slot) => (
-                            <label key={slot.value}>
-                              <input
-                                type="checkbox"
-                                checked={entry.slots?.includes(slot.value) ?? false}
-                                onChange={() => {
-                                  const currentSlots = entry.slots ?? [];
-                                  const slots = currentSlots.includes(slot.value)
-                                    ? currentSlots.filter((value) => value !== slot.value)
-                                    : [...currentSlots, slot.value];
-
-                                  updateDayRule(entry.isoDate, {
-                                    slots: slots.length > 0 ? slots : undefined,
-                                  });
-                                }}
-                              />
-                              {slot.label}
-                            </label>
-                          ))}
-                        </div>
-                        <span className="day-rule-hint">
-                          Leave unchecked to use default {DAY_LABELS[dayKey]} slots from Business Hours.
-                        </span>
-                      </div>
+                      </details>
                     </article>
                   );
                 })}
@@ -369,12 +393,15 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
 
               <div className="admin-actions calendar-panel-actions">
                 <button type="button" className="admin-button primary" onClick={applyRules}>
-                  Save rules for selected days
+                  Save rules
                 </button>
                 <button type="button" className="admin-button danger" onClick={clearRules}>
                   Clear rules
                 </button>
               </div>
+              <p className="admin-note calendar-save-note">
+                After saving, open the <strong>Publish</strong> tab to push changes to the live widget.
+              </p>
             </>
           )}
         </aside>

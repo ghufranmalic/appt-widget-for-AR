@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-07T17:23:49.116Z",
+  "updatedAt": "2026-08-07T18:46:05.829Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -18,19 +18,19 @@
       "closed": true
     },
     "monday": {
-      "open": "09:00",
+      "open": "08:00",
       "close": "17:00"
     },
     "tuesday": {
-      "open": "09:00",
+      "open": "08:00",
       "close": "17:00"
     },
     "wednesday": {
-      "open": "09:00",
+      "open": "08:00",
       "close": "17:00"
     },
     "thursday": {
-      "open": "09:00",
+      "open": "08:00",
       "close": "17:00"
     },
     "friday": {

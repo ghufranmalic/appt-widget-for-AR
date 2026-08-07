@@ -1,8 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const base = process.env.VITE_BASE_PATH || "/appt-widget-for-AR/";
+
 export default defineConfig({
-  base: "/appt-widget-for-AR/",
+  base,
   publicDir: "public",
   build: {
     rollupOptions: {

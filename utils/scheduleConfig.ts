@@ -1,7 +1,9 @@
 import type { ScheduleConfig } from "../types/schedule";
 import { createDefaultScheduleConfig } from "./defaultSchedule";
 
-const SCHEDULE_URL = `${import.meta.env.BASE_URL}schedule.json`;
+const SCHEDULE_URL =
+  import.meta.env.VITE_SCHEDULE_URL?.trim() ||
+  `${import.meta.env.BASE_URL}schedule.json`;
 const DEFAULT_REPO = import.meta.env.VITE_GITHUB_REPO?.trim() || "ghufranmalic/appt-widget-for-AR";
 
 let cachedConfig: ScheduleConfig | null = null;

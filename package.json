@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc && vite build"
+    "dev:admin": "vite --config vite.admin.config.ts --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "build:admin": "tsc && vite build --config vite.admin.config.ts && node scripts/prepare-cloudflare-admin.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",

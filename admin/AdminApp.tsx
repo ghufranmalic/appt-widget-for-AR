@@ -12,6 +12,8 @@ import {
 import { lockAdmin } from "./AdminPinGate";
 import { CalendarBoard } from "./CalendarBoard";
 
+const WIDGET_URL = import.meta.env.VITE_WIDGET_URL?.trim() || import.meta.env.BASE_URL;
+
 type AdminTab = "hours" | "weeks";
 
 export function AdminApp() {
@@ -105,7 +107,7 @@ export function AdminApp() {
 
       <div className="admin-toolbar">
         <div className="admin-toolbar-actions">
-          <a className="admin-button secondary" href={`${import.meta.env.BASE_URL}`} target="_blank" rel="noreferrer">
+          <a className="admin-button secondary" href={WIDGET_URL} target="_blank" rel="noreferrer">
             Preview widget
           </a>
           <button type="button" className="admin-button secondary" onClick={() => downloadScheduleConfig(config)}>

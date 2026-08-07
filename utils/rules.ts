@@ -23,6 +23,11 @@ const FRIDAY_SLOTS: AppointmentSlot[] = [
   { label: "6:00 PM", hour: 18, minute: 0 },
 ];
 
+const SATURDAY_SLOTS: AppointmentSlot[] = [
+  { label: "9:00 AM", hour: 9, minute: 0 },
+  { label: "1:00 PM", hour: 13, minute: 0 },
+];
+
 const WEEKDAY_OPEN_MINUTES = 8 * 60;
 const WEEKDAY_CLOSE_MINUTES = 17 * 60;
 const SATURDAY_OPEN_MINUTES = 9 * 60;
@@ -48,6 +53,37 @@ function nextBusinessDayFrom(dayIndex: number): number {
 function followingBusinessDayAfterNextDay(dayIndex: number): number {
   const nextDay = (dayIndex + 1) % 7;
   return nextBusinessDayFrom(nextDay);
+}
+
+const TUESDAY_RESTRICTED_AGENT_NOTE =
+  "Do not offer Saturday appointments (9:00 AM or 1:00 PM) during this period.";
+
+const TUESDAY_RESTRICTED_REASON =
+  "From Friday after-hours through Monday morning, Saturday appointment slots cannot be offered; skip the weekend and Monday—earliest allowed is Tuesday.";
+
+function formatSlotLabels(slots: AppointmentSlot[]): string {
+  return slots.map((slot) => slot.label).join(", ");
+}
+
+function isAfterHoursFridayThroughMondayMorning(
+  current: Pick<ETDateTimeParts, "dayIndex" | "hour" | "minute">,
+): boolean {
+  const status = getBusinessStatus(current);
+  const isBeforeWeekdayOpening = minutesSinceMidnight(current) < WEEKDAY_OPEN_MINUTES;
+
+  if (current.dayIndex === 5) {
+    return status === "CLOSED" && !isBeforeWeekdayOpening;
+  }
+
+  if (current.dayIndex === 6 || current.dayIndex === 0) {
+    return true;
+  }
+
+  if (current.dayIndex === 1) {
+    return isBeforeWeekdayOpening;
+  }
+
+  return false;
 }
 
 export function getBusinessStatus(current: Pick<ETDateTimeParts, "dayIndex" | "hour" | "minute">): BusinessStatus {
@@ -77,6 +113,10 @@ export function getSlots(dayIndex: number): AppointmentSlot[] {
     return [...FRIDAY_SLOTS];
   }
 
+  if (dayIndex === 6) {
+    return [...SATURDAY_SLOTS];
+  }
+
   return [];
 }
 
@@ -87,25 +127,20 @@ export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" 
   let dayIndex: number;
   let severity: BookingSeverity;
   let reason: string;
+  let agentNote: string | undefined;
 
-  if (current.dayIndex === 5) {
-    if (status === "OPEN") {
-      dayIndex = 6;
-      severity = "limited";
-      reason = "Friday requests during business hours can only offer Saturday appointments.";
-    } else if (isBeforeWeekdayOpening) {
-      dayIndex = 6;
-      severity = "limited";
-      reason = "Friday before opening can offer next-day Saturday appointments.";
-    } else {
-      dayIndex = 2;
-      severity = "restricted";
-      reason = "Friday after-hours requests skip the weekend and Monday; earliest allowed is Tuesday.";
-    }
-  } else if (current.dayIndex === 6 || current.dayIndex === 0) {
+  if (isAfterHoursFridayThroughMondayMorning(current)) {
     dayIndex = 2;
     severity = "restricted";
-    reason = "Weekend requests must skip Sunday and Monday; earliest allowed is Tuesday.";
+    reason = TUESDAY_RESTRICTED_REASON;
+    agentNote = TUESDAY_RESTRICTED_AGENT_NOTE;
+  } else if (current.dayIndex === 5) {
+    dayIndex = 6;
+    severity = "limited";
+    const saturdaySlots = formatSlotLabels(SATURDAY_SLOTS);
+    reason = status === "OPEN"
+      ? `Friday requests during business hours can only offer Saturday appointments (${saturdaySlots}).`
+      : `Friday before opening can offer next-day Saturday appointments (${saturdaySlots}).`;
   } else if (isNormalWeekday(current.dayIndex)) {
     if (status === "OPEN") {
       dayIndex = nextBusinessDayFrom(current.dayIndex);
@@ -131,10 +166,11 @@ export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" 
     dayIndex,
     severity,
     reason,
+    agentNote,
   };
 }
 
-export function getAgentMessage(next: Pick<NextAppointmentDay, "label" | "dayIndex">): string {
+export function getAgentMessage(next: Pick<NextAppointmentDay, "label" | "dayIndex" | "agentNote">): string {
   const slots = getSlots(next.dayIndex);
   const firstSlot = slots[0]?.label;
 
@@ -142,7 +178,8 @@ export function getAgentMessage(next: Pick<NextAppointmentDay, "label" | "dayInd
     return "No valid appointment slots are available for this day. Do not offer an appointment.";
   }
 
-  return `You can offer an appointment on ${next.label} at ${firstSlot}. Available slots are: ${slots
-    .map((slot) => slot.label)
-    .join(", ")}.`;
+  const slotList = formatSlotLabels(slots);
+  const note = next.agentNote ? `${next.agentNote} ` : "";
+
+  return `${note}You can offer an appointment on ${next.label} at ${firstSlot}. Available slots are: ${slotList}.`;
 }

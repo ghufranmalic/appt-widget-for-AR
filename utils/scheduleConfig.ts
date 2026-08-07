@@ -49,8 +49,21 @@ export async function publishScheduleToGitHub(
   token: string,
   repo = "ghufranmalic/appt-widget-for-AR",
 ): Promise<void> {
-  const path = "public/schedule.json";
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
+  const payload = JSON.stringify(config, null, 2);
+  const paths = ["public/schedule.json", "schedule.json"];
+
+  for (const path of paths) {
+    await publishFileToGitHub(path, payload, token, repo);
+  }
+}
+
+async function publishFileToGitHub(
+  path: string,
+  content: string,
+  token: string,
+  repo: string,
+): Promise<void> {
+  const encoded = btoa(unescape(encodeURIComponent(content)));
   const headers = {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
@@ -70,14 +83,14 @@ export async function publishScheduleToGitHub(
     headers,
     body: JSON.stringify({
       message: "Update appointment schedule from Blazeo admin",
-      content,
+      content: encoded,
       sha,
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(error || "Failed to publish schedule to GitHub.");
+    throw new Error(error || `Failed to publish ${path} to GitHub.`);
   }
 }
 

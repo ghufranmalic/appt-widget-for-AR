@@ -23,10 +23,8 @@ const FRIDAY_SLOTS: AppointmentSlot[] = [
   { label: "6:00 PM", hour: 18, minute: 0 },
 ];
 
-const WEEKDAY_OPEN_MINUTES = 8 * 60;
+const WEEKDAY_OPEN_MINUTES = 9 * 60;
 const WEEKDAY_CLOSE_MINUTES = 17 * 60;
-const SATURDAY_OPEN_MINUTES = 9 * 60;
-const SATURDAY_CLOSE_MINUTES = 13 * 60;
 
 function minutesSinceMidnight(state: Pick<ETDateTimeParts, "hour" | "minute">): number {
   return state.hour * 60 + state.minute;
@@ -75,10 +73,6 @@ export function getBusinessStatus(current: Pick<ETDateTimeParts, "dayIndex" | "h
 
   if (current.dayIndex >= 1 && current.dayIndex <= 5) {
     return currentMinutes >= WEEKDAY_OPEN_MINUTES && currentMinutes <= WEEKDAY_CLOSE_MINUTES ? "OPEN" : "CLOSED";
-  }
-
-  if (current.dayIndex === 6) {
-    return currentMinutes >= SATURDAY_OPEN_MINUTES && currentMinutes <= SATURDAY_CLOSE_MINUTES ? "OPEN" : "CLOSED";
   }
 
   return "CLOSED";

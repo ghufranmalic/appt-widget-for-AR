@@ -1,4 +1,36 @@
-import type { ScheduleConfig } from "../types/schedule";
+import type { ScheduleConfig, WeekSchedule } from "../types/schedule";
+import { createTemplateWeek, formatWeekLabel } from "./weekSchedule";
+
+function customizeWeek(
+  week: WeekSchedule,
+  endDate: string,
+  options?: {
+    mondaySlots?: string[];
+    fridayBeforeTarget?: string;
+    weekendTarget?: string;
+  },
+): WeekSchedule {
+  return {
+    ...week,
+    endDate,
+    label: formatWeekLabel(week.startDate, endDate),
+    rules: week.rules.map((rule, index) => {
+      if (index === 0 && options?.mondaySlots) {
+        return { ...rule, slots: options.mondaySlots };
+      }
+
+      if (index === 4 && options?.fridayBeforeTarget) {
+        return { ...rule, targetDate: options.fridayBeforeTarget };
+      }
+
+      if (index === 5 && options?.weekendTarget) {
+        return { ...rule, targetDate: options.weekendTarget };
+      }
+
+      return rule;
+    }),
+  };
+}
 
 export function createDefaultScheduleConfig(): ScheduleConfig {
   return {
@@ -16,12 +48,12 @@ export function createDefaultScheduleConfig(): ScheduleConfig {
     },
     businessHours: {
       sunday: { open: "00:00", close: "00:00", closed: true },
-      monday: { open: "08:00", close: "17:00" },
-      tuesday: { open: "08:00", close: "17:00" },
-      wednesday: { open: "08:00", close: "17:00" },
-      thursday: { open: "08:00", close: "17:00" },
-      friday: { open: "08:00", close: "17:00" },
-      saturday: { open: "09:00", close: "13:00" },
+      monday: { open: "09:00", close: "17:00" },
+      tuesday: { open: "09:00", close: "17:00" },
+      wednesday: { open: "09:00", close: "17:00" },
+      thursday: { open: "09:00", close: "17:00" },
+      friday: { open: "09:00", close: "17:00" },
+      saturday: { open: "00:00", close: "00:00", closed: true },
     },
     defaultSlots: {
       sunday: [],
@@ -33,163 +65,14 @@ export function createDefaultScheduleConfig(): ScheduleConfig {
       saturday: [],
     },
     weeks: [
-      {
-        id: "week-2026-08-10",
-        label: "Week of August 10th-16th",
-        startDate: "2026-08-10",
-        endDate: "2026-08-16",
-        rules: [
-          {
-            id: "r1",
-            label: "If Monday",
-            days: ["monday"],
-            timeCondition: "all",
-            targetDate: "2026-08-11",
-            slots: ["14:00", "18:00"],
-          },
-          {
-            id: "r2",
-            label: "If Tuesday",
-            days: ["tuesday"],
-            timeCondition: "all",
-            targetDate: "2026-08-12",
-          },
-          {
-            id: "r3",
-            label: "If Wednesday",
-            days: ["wednesday"],
-            timeCondition: "all",
-            targetDate: "2026-08-13",
-          },
-          {
-            id: "r4",
-            label: "If Thursday",
-            days: ["thursday"],
-            timeCondition: "all",
-            targetDate: "2026-08-14",
-          },
-          {
-            id: "r5",
-            label: "If Friday before 5pm",
-            days: ["friday"],
-            timeCondition: "before",
-            time: "17:00",
-            targetDate: "2026-08-17",
-          },
-          {
-            id: "r6",
-            label: "If Friday after 5pm, Saturday, or Sunday",
-            days: ["friday", "saturday", "sunday"],
-            timeCondition: "after",
-            time: "17:00",
-            targetDate: "2026-08-18",
-          },
-        ],
-      },
-      {
-        id: "week-2026-08-17",
-        label: "Week of August 17th-22nd",
-        startDate: "2026-08-17",
-        endDate: "2026-08-22",
-        rules: [
-          {
-            id: "r1",
-            label: "If Monday",
-            days: ["monday"],
-            timeCondition: "all",
-            targetDate: "2026-08-18",
-          },
-          {
-            id: "r2",
-            label: "If Tuesday",
-            days: ["tuesday"],
-            timeCondition: "all",
-            targetDate: "2026-08-19",
-          },
-          {
-            id: "r3",
-            label: "If Wednesday",
-            days: ["wednesday"],
-            timeCondition: "all",
-            targetDate: "2026-08-20",
-          },
-          {
-            id: "r4",
-            label: "If Thursday",
-            days: ["thursday"],
-            timeCondition: "all",
-            targetDate: "2026-08-21",
-          },
-          {
-            id: "r5",
-            label: "If Friday before 5pm",
-            days: ["friday"],
-            timeCondition: "before",
-            time: "17:00",
-            targetDate: "2026-08-24",
-          },
-          {
-            id: "r6",
-            label: "If Friday after 5pm, Saturday, or Sunday",
-            days: ["friday", "saturday", "sunday"],
-            timeCondition: "after",
-            time: "17:00",
-            targetDate: "2026-08-25",
-          },
-        ],
-      },
-      {
-        id: "week-2026-08-24",
-        label: "Week of August 24th-29th",
-        startDate: "2026-08-24",
-        endDate: "2026-08-29",
-        rules: [
-          {
-            id: "r1",
-            label: "If Monday",
-            days: ["monday"],
-            timeCondition: "all",
-            targetDate: "2026-08-25",
-          },
-          {
-            id: "r2",
-            label: "If Tuesday",
-            days: ["tuesday"],
-            timeCondition: "all",
-            targetDate: "2026-08-26",
-          },
-          {
-            id: "r3",
-            label: "If Wednesday",
-            days: ["wednesday"],
-            timeCondition: "all",
-            targetDate: "2026-08-27",
-          },
-          {
-            id: "r4",
-            label: "If Thursday",
-            days: ["thursday"],
-            timeCondition: "all",
-            targetDate: "2026-08-28",
-          },
-          {
-            id: "r5",
-            label: "If Friday before 5pm",
-            days: ["friday"],
-            timeCondition: "before",
-            time: "17:00",
-            targetDate: "2026-08-31",
-          },
-          {
-            id: "r6",
-            label: "If Friday after 5pm, Saturday, or Sunday",
-            days: ["friday", "saturday", "sunday"],
-            timeCondition: "after",
-            time: "17:00",
-            targetDate: "2026-09-01",
-          },
-        ],
-      },
+      customizeWeek(createTemplateWeek("2026-08-10"), "2026-08-16", {
+        mondaySlots: ["14:00", "18:00"],
+      }),
+      customizeWeek(createTemplateWeek("2026-08-17"), "2026-08-22"),
+      customizeWeek(createTemplateWeek("2026-08-24"), "2026-08-29", {
+        fridayBeforeTarget: "2026-08-31",
+        weekendTarget: "2026-09-01",
+      }),
     ],
   };
 }

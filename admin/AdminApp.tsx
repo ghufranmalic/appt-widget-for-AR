@@ -15,83 +15,22 @@ import {
   loadScheduleConfig,
   publishScheduleToGitHub,
 } from "../utils/scheduleConfig";
+import {
+  clearAdminSettings,
+  hasSavedGitHubToken,
+  loadAdminSettings,
+  saveAdminSettings,
+} from "../utils/adminSettings";
+import {
+  addDays,
+  createTemplateWeek,
+  findCoverageGaps,
+  formatWeekLabel,
+  generateWeeksForMonth,
+  summarizeCoverageGaps,
+} from "../utils/weekSchedule";
 
-type AdminTab = "hours" | "weeks" | "publish";
-
-const TOKEN_STORAGE_KEY = "blazeo-admin-github-token";
-
-function addDays(isoDate: string, days: number): string {
-  const date = new Date(`${isoDate}T12:00:00`);
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-}
-
-function createTemplateWeek(startDate: string): WeekSchedule {
-  const endDate = addDays(startDate, 6);
-  const startLabel = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    timeZone: "America/New_York",
-  }).format(new Date(`${startDate}T12:00:00`));
-  const endLabel = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    timeZone: "America/New_York",
-  }).format(new Date(`${endDate}T12:00:00`));
-
-  return {
-    id: createWeekId(),
-    label: `Week of ${startLabel}-${endLabel}`,
-    startDate,
-    endDate,
-    rules: [
-      {
-        id: createRuleId(),
-        label: "If Monday",
-        days: ["monday"],
-        timeCondition: "all",
-        targetDate: addDays(startDate, 1),
-      },
-      {
-        id: createRuleId(),
-        label: "If Tuesday",
-        days: ["tuesday"],
-        timeCondition: "all",
-        targetDate: addDays(startDate, 2),
-      },
-      {
-        id: createRuleId(),
-        label: "If Wednesday",
-        days: ["wednesday"],
-        timeCondition: "all",
-        targetDate: addDays(startDate, 3),
-      },
-      {
-        id: createRuleId(),
-        label: "If Thursday",
-        days: ["thursday"],
-        timeCondition: "all",
-        targetDate: addDays(startDate, 4),
-      },
-      {
-        id: createRuleId(),
-        label: "If Friday before 5pm",
-        days: ["friday"],
-        timeCondition: "before",
-        time: "17:00",
-        targetDate: addDays(startDate, 7),
-      },
-      {
-        id: createRuleId(),
-        label: "If Friday after 5pm, Saturday, or Sunday",
-        days: ["friday", "saturday", "sunday"],
-        timeCondition: "after",
-        time: "17:00",
-        targetDate: addDays(startDate, 8),
-      },
-    ],
-  };
-}
+type AdminTab = "hours" | "weeks" | "publish" | "settings";
 
 function RuleEditor({
   rule,
@@ -186,17 +125,17 @@ function RuleEditor({
 export function AdminApp() {
   const [tab, setTab] = useState<AdminTab>("weeks");
   const [config, setConfig] = useState<ScheduleConfig>(() => getDefaultScheduleConfig());
-  const [token, setToken] = useState("");
+  const [settings, setSettings] = useState(() => loadAdminSettings());
+  const [tokenSaved, setTokenSaved] = useState(() => hasSavedGitHubToken());
+  const [generateMonth, setGenerateMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error" | "">("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = sessionStorage.getItem(TOKEN_STORAGE_KEY);
-    if (savedToken) {
-      setToken(savedToken);
-    }
-
     loadScheduleConfig(true).then((loaded) => {
       if (loaded) {
         setConfig(loaded);
@@ -217,11 +156,25 @@ export function AdminApp() {
     }));
   };
 
+  const coverageMessage = useMemo(
+    () => summarizeCoverageGaps(findCoverageGaps(sortedWeeks)),
+    [sortedWeeks],
+  );
+
   const updateWeek = (weekId: string, week: WeekSchedule) => {
     updateConfig((current) => ({
       ...current,
       weeks: current.weeks.map((item) => (item.id === weekId ? week : item)),
     }));
+  };
+
+  const updateWeekDates = (weekId: string, week: WeekSchedule, startDate: string, endDate: string) => {
+    updateWeek(weekId, {
+      ...week,
+      startDate,
+      endDate,
+      label: formatWeekLabel(startDate, endDate),
+    });
   };
 
   const addWeek = () => {
@@ -233,20 +186,47 @@ export function AdminApp() {
     }));
   };
 
+  const addMonthWeeks = () => {
+    const [yearPart, monthPart] = generateMonth.split("-");
+    const year = Number(yearPart);
+    const month = Number(monthPart);
+    const created = generateWeeksForMonth(year, month, config.weeks);
+
+    if (created.length === 0) {
+      setStatus("No new weeks were added. This month may already be covered.");
+      setStatusType("error");
+      return;
+    }
+
+    updateConfig((current) => ({
+      ...current,
+      weeks: [...current.weeks, ...created],
+    }));
+    setStatus(`Added ${created.length} week(s) for ${generateMonth}. Review the target dates, then publish.`);
+    setStatusType("success");
+  };
+
+  const handleSaveSettings = () => {
+    saveAdminSettings(settings);
+    setTokenSaved(hasSavedGitHubToken());
+    setStatus("GitHub settings saved in this browser. You will not need to enter the token again.");
+    setStatusType("success");
+  };
+
   const handlePublish = async () => {
     setStatus("");
     setStatusType("");
+    const saved = loadAdminSettings();
 
-    if (!token.trim()) {
+    if (!saved.githubToken.trim()) {
       downloadScheduleConfig(config);
-      setStatus("No GitHub token provided. Downloaded schedule.json — place it in public/schedule.json and push to deploy.");
-      setStatusType("success");
+      setStatus("No saved GitHub token. Downloaded schedule.json — save your token under Settings for one-click publish.");
+      setStatusType("error");
       return;
     }
 
     try {
-      sessionStorage.setItem(TOKEN_STORAGE_KEY, token.trim());
-      await publishScheduleToGitHub(config, token.trim());
+      await publishScheduleToGitHub(config, saved.githubToken, saved.githubRepo);
       setStatus("Schedule published to GitHub. The widget will update after Pages deploys (about 1-2 minutes).");
       setStatusType("success");
     } catch (error) {
@@ -299,12 +279,25 @@ export function AdminApp() {
         >
           Publish
         </button>
+        <button
+          type="button"
+          className={`admin-tab ${tab === "settings" ? "active" : ""}`}
+          onClick={() => setTab("settings")}
+        >
+          Settings
+        </button>
       </div>
+
+      {status && tab !== "publish" && tab !== "settings" && (
+        <div className={`admin-status ${statusType}`}>{status}</div>
+      )}
 
       {tab === "hours" && (
         <section className="admin-card">
           <h2>Business Hours (Eastern Time)</h2>
-          <p className="admin-note">Set when the office is open. Agents see OPEN/CLOSED in the widget.</p>
+          <p className="admin-note">
+            Allied Remodeling operates Monday–Friday, 9:00 AM–5:00 PM EST. Saturday and Sunday are closed.
+          </p>
           <div className="admin-grid hours">
             {DAY_KEYS.map((day) => (
               <div key={day} className="admin-field">
@@ -395,9 +388,32 @@ export function AdminApp() {
 
       {tab === "weeks" && (
         <>
+          <section className="admin-card admin-info-card">
+            <h2>How weeks work</h2>
+            <p className="admin-note">
+              Each week is active only between its <strong>start</strong> and <strong>end</strong> dates (with year).
+              August 2026, September 2026, October 2027, and so on each need their own weeks added — labels are
+              generated automatically from the dates you pick.
+            </p>
+            <p className={`admin-status ${findCoverageGaps(sortedWeeks).length ? "error" : "success"}`}>
+              {coverageMessage}
+            </p>
+          </section>
+
           <div className="admin-actions" style={{ marginBottom: 16 }}>
-            <button type="button" className="admin-button primary" onClick={addWeek}>
-              + Add week from template
+            <div className="admin-field" style={{ minWidth: 180 }}>
+              <label>Generate weeks for month</label>
+              <input
+                type="month"
+                value={generateMonth}
+                onChange={(event) => setGenerateMonth(event.target.value)}
+              />
+            </div>
+            <button type="button" className="admin-button primary" onClick={addMonthWeeks}>
+              + Add month
+            </button>
+            <button type="button" className="admin-button secondary" onClick={addWeek}>
+              + Add single week
             </button>
             <button
               type="button"
@@ -428,18 +444,17 @@ export function AdminApp() {
 
               <div className="week-meta">
                 <div className="admin-field">
-                  <label>Week label</label>
-                  <input
-                    value={week.label}
-                    onChange={(event) => updateWeek(week.id, { ...week, label: event.target.value })}
-                  />
+                  <label>Week label (auto-generated)</label>
+                  <input value={week.label} readOnly />
                 </div>
                 <div className="admin-field">
                   <label>Start date</label>
                   <input
                     type="date"
                     value={week.startDate}
-                    onChange={(event) => updateWeek(week.id, { ...week, startDate: event.target.value })}
+                    onChange={(event) =>
+                      updateWeekDates(week.id, week, event.target.value, week.endDate)
+                    }
                   />
                 </div>
                 <div className="admin-field">
@@ -447,7 +462,9 @@ export function AdminApp() {
                   <input
                     type="date"
                     value={week.endDate}
-                    onChange={(event) => updateWeek(week.id, { ...week, endDate: event.target.value })}
+                    onChange={(event) =>
+                      updateWeekDates(week.id, week, week.startDate, event.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -505,21 +522,15 @@ export function AdminApp() {
             changes go live for all agents after GitHub Pages redeploys.
           </p>
 
-          <div className="admin-token-box">
-            <div className="admin-field">
-              <label>GitHub personal access token (optional)</label>
-              <input
-                type="password"
-                value={token}
-                placeholder="ghp_..."
-                onChange={(event) => setToken(event.target.value)}
-              />
-              <span>
-                Token needs <code>repo</code> scope. Stored only in this browser session. Without a token, you can
-                download the JSON file instead.
-              </span>
-            </div>
-          </div>
+          {tokenSaved ? (
+            <p className="admin-status success">
+              GitHub token is saved in this browser. Click publish below — no need to re-enter it.
+            </p>
+          ) : (
+            <p className="admin-status error">
+              Set up your GitHub token once under the <strong>Settings</strong> tab to enable one-click publish.
+            </p>
+          )}
 
           <div className="admin-actions" style={{ marginTop: 16 }}>
             <button type="button" className="admin-button primary" onClick={handlePublish}>
@@ -542,6 +553,58 @@ export function AdminApp() {
           <p className="admin-note" style={{ marginTop: 16 }}>
             Last updated: {new Date(config.updatedAt).toLocaleString("en-US", { timeZone: "America/New_York" })} ET
           </p>
+        </section>
+      )}
+
+      {tab === "settings" && (
+        <section className="admin-card">
+          <h2>One-time GitHub setup</h2>
+          <p className="admin-note">
+            Save your GitHub token here once. It stays in this browser only (localStorage) so you do not need to enter
+            it every time you publish.
+          </p>
+
+          <div className="admin-token-box">
+            <div className="admin-field">
+              <label>GitHub personal access token</label>
+              <input
+                type="password"
+                value={settings.githubToken}
+                placeholder="ghp_..."
+                onChange={(event) => setSettings({ ...settings, githubToken: event.target.value })}
+              />
+              <span>Token needs <code>repo</code> scope to update schedule.json in the repository.</span>
+            </div>
+            <div className="admin-field">
+              <label>GitHub repository</label>
+              <input
+                value={settings.githubRepo}
+                onChange={(event) => setSettings({ ...settings, githubRepo: event.target.value })}
+              />
+              <span>Format: owner/repo (example: ghufranmalic/appt-widget-for-AR)</span>
+            </div>
+          </div>
+
+          <div className="admin-actions" style={{ marginTop: 16 }}>
+            <button type="button" className="admin-button primary" onClick={handleSaveSettings}>
+              Save settings
+            </button>
+            <button
+              type="button"
+              className="admin-button danger"
+              onClick={() => {
+                clearAdminSettings();
+                setSettings(loadAdminSettings());
+                setTokenSaved(false);
+                setStatus("Saved GitHub settings cleared from this browser.");
+                setStatusType("success");
+              }}
+            >
+              Clear saved token
+            </button>
+          </div>
+
+          {status && <div className={`admin-status ${statusType}`}>{status}</div>}
         </section>
       )}
     </div>

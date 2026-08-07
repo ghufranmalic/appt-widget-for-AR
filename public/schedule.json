@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-07T15:37:14.509Z",
+  "updatedAt": "2026-08-07T15:45:49.082Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -18,28 +18,29 @@
       "closed": true
     },
     "monday": {
-      "open": "08:00",
+      "open": "09:00",
       "close": "17:00"
     },
     "tuesday": {
-      "open": "08:00",
+      "open": "09:00",
       "close": "17:00"
     },
     "wednesday": {
-      "open": "08:00",
+      "open": "09:00",
       "close": "17:00"
     },
     "thursday": {
-      "open": "08:00",
+      "open": "09:00",
       "close": "17:00"
     },
     "friday": {
-      "open": "08:00",
+      "open": "09:00",
       "close": "17:00"
     },
     "saturday": {
-      "open": "09:00",
-      "close": "13:00"
+      "open": "00:00",
+      "close": "00:00",
+      "closed": true
     }
   },
   "defaultSlots": {
@@ -70,13 +71,13 @@
   },
   "weeks": [
     {
-      "id": "week-2026-08-10",
-      "label": "Week of August 10th-16th",
+      "id": "week-1786117549054-pcpsp",
+      "label": "Aug 10 – Aug 16, 2026",
       "startDate": "2026-08-10",
       "endDate": "2026-08-16",
       "rules": [
         {
-          "id": "r1",
+          "id": "rule-1786117549079-jwwre",
           "label": "If Monday",
           "days": [
             "monday"
@@ -89,7 +90,7 @@
           ]
         },
         {
-          "id": "r2",
+          "id": "rule-1786117549079-02otz",
           "label": "If Tuesday",
           "days": [
             "tuesday"
@@ -98,7 +99,7 @@
           "targetDate": "2026-08-12"
         },
         {
-          "id": "r3",
+          "id": "rule-1786117549079-tvbn3",
           "label": "If Wednesday",
           "days": [
             "wednesday"
@@ -107,7 +108,7 @@
           "targetDate": "2026-08-13"
         },
         {
-          "id": "r4",
+          "id": "rule-1786117549079-17doz",
           "label": "If Thursday",
           "days": [
             "thursday"
@@ -116,7 +117,7 @@
           "targetDate": "2026-08-14"
         },
         {
-          "id": "r5",
+          "id": "rule-1786117549079-bf3be",
           "label": "If Friday before 5pm",
           "days": [
             "friday"
@@ -126,7 +127,7 @@
           "targetDate": "2026-08-17"
         },
         {
-          "id": "r6",
+          "id": "rule-1786117549079-f9for",
           "label": "If Friday after 5pm, Saturday, or Sunday",
           "days": [
             "friday",
@@ -140,13 +141,13 @@
       ]
     },
     {
-      "id": "week-2026-08-17",
-      "label": "Week of August 17th-22nd",
+      "id": "week-1786117549080-out8a",
+      "label": "Aug 17 – Aug 22, 2026",
       "startDate": "2026-08-17",
       "endDate": "2026-08-22",
       "rules": [
         {
-          "id": "r1",
+          "id": "rule-1786117549080-w6nch",
           "label": "If Monday",
           "days": [
             "monday"
@@ -155,7 +156,7 @@
           "targetDate": "2026-08-18"
         },
         {
-          "id": "r2",
+          "id": "rule-1786117549080-cnvg6",
           "label": "If Tuesday",
           "days": [
             "tuesday"
@@ -164,7 +165,7 @@
           "targetDate": "2026-08-19"
         },
         {
-          "id": "r3",
+          "id": "rule-1786117549080-erskp",
           "label": "If Wednesday",
           "days": [
             "wednesday"
@@ -173,7 +174,7 @@
           "targetDate": "2026-08-20"
         },
         {
-          "id": "r4",
+          "id": "rule-1786117549080-jmu4j",
           "label": "If Thursday",
           "days": [
             "thursday"
@@ -182,7 +183,7 @@
           "targetDate": "2026-08-21"
         },
         {
-          "id": "r5",
+          "id": "rule-1786117549080-3jdxe",
           "label": "If Friday before 5pm",
           "days": [
             "friday"
@@ -192,7 +193,7 @@
           "targetDate": "2026-08-24"
         },
         {
-          "id": "r6",
+          "id": "rule-1786117549080-ei1f9",
           "label": "If Friday after 5pm, Saturday, or Sunday",
           "days": [
             "friday",
@@ -206,13 +207,13 @@
       ]
     },
     {
-      "id": "week-2026-08-24",
-      "label": "Week of August 24th-29th",
+      "id": "week-1786117549081-2x0hl",
+      "label": "Aug 24 – Aug 29, 2026",
       "startDate": "2026-08-24",
       "endDate": "2026-08-29",
       "rules": [
         {
-          "id": "r1",
+          "id": "rule-1786117549082-ls3yx",
           "label": "If Monday",
           "days": [
             "monday"
@@ -221,7 +222,7 @@
           "targetDate": "2026-08-25"
         },
         {
-          "id": "r2",
+          "id": "rule-1786117549082-wc1hz",
           "label": "If Tuesday",
           "days": [
             "tuesday"
@@ -230,7 +231,7 @@
           "targetDate": "2026-08-26"
         },
         {
-          "id": "r3",
+          "id": "rule-1786117549082-tidy9",
           "label": "If Wednesday",
           "days": [
             "wednesday"
@@ -239,7 +240,7 @@
           "targetDate": "2026-08-27"
         },
         {
-          "id": "r4",
+          "id": "rule-1786117549082-mz7u3",
           "label": "If Thursday",
           "days": [
             "thursday"
@@ -248,7 +249,7 @@
           "targetDate": "2026-08-28"
         },
         {
-          "id": "r5",
+          "id": "rule-1786117549082-f82nr",
           "label": "If Friday before 5pm",
           "days": [
             "friday"
@@ -258,7 +259,7 @@
           "targetDate": "2026-08-31"
         },
         {
-          "id": "r6",
+          "id": "rule-1786117549082-716rw",
           "label": "If Friday after 5pm, Saturday, or Sunday",
           "days": [
             "friday",

@@ -259,6 +259,11 @@ body {
   color: var(--danger);
 }
 
+.admin-info-card {
+  background: #f8fbff;
+  border-color: #c9dcff;
+}
+
 .admin-token-box {
   display: grid;
   gap: 10px;

@@ -1,24 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ScheduleConfig, ScheduleRule } from "../types/schedule";
+import type { ScheduleConfig, TimeCondition } from "../types/schedule";
 import {
   applyDayRulesToConfig,
-  applyRulesToSelection,
   buildCalendarWeeks,
   clearRulesForSelection,
+  createDayRuleEntry,
   DayRuleEntry,
   formatDayHeading,
   formatMonthLabel,
   formatSelectionLabel,
   formatShortDate,
   getCurrentYearMonth,
+  getDayKeyFromIso,
   getDaysInMonth,
   getMonthDateList,
   isDateConfigured,
   loadDayRuleEntries,
-  loadRulesForSelection,
-  RULE_TEMPLATES,
   shiftMonth,
 } from "../utils/calendarSchedule";
+import { DAY_LABELS, SLOT_OPTIONS } from "../utils/scheduleConstants";
 
 interface CalendarBoardProps {
   config: ScheduleConfig;
@@ -27,13 +27,22 @@ interface CalendarBoardProps {
 
 const WEEKDAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const TIME_CONDITION_OPTIONS: Array<{ value: TimeCondition; label: string; time?: string }> = [
+  { value: "all", label: "All day" },
+  { value: "business_hours", label: "Business hours only" },
+  { value: "before", label: "Before 5:00 PM", time: "17:00" },
+  { value: "after", label: "After 5:00 PM", time: "17:00" },
+];
+
+function timeConditionKey(entry: DayRuleEntry): string {
+  return `${entry.timeCondition}:${entry.time ?? ""}`;
+}
+
 export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentYearMonth);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [lastClicked, setLastClicked] = useState<string | null>(null);
   const [dayRules, setDayRules] = useState<DayRuleEntry[]>([]);
-  const [weeklyRules, setWeeklyRules] = useState<ScheduleRule[]>([]);
-  const [useWeeklyRules, setUseWeeklyRules] = useState(false);
 
   const [yearPart, monthPart] = selectedMonth.split("-");
   const year = Number(yearPart);
@@ -44,13 +53,10 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
   useEffect(() => {
     if (selectedDates.length === 0) {
       setDayRules([]);
-      setWeeklyRules([]);
       return;
     }
 
     setDayRules(loadDayRuleEntries(config.weeks, selectedDates));
-    setWeeklyRules(loadRulesForSelection(config.weeks, selectedDates));
-    setUseWeeklyRules(selectedDates.length > 7);
   }, [selectedDates, config.weeks]);
 
   const updateSelection = (dates: string[]) => {
@@ -102,7 +108,6 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
   const clearSelection = () => {
     setSelectedDates([]);
     setDayRules([]);
-    setWeeklyRules([]);
     setLastClicked(null);
   };
 
@@ -110,22 +115,27 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
     updateSelection(selectedDates.filter((date) => date !== isoDate));
   };
 
+  const updateDayRule = (isoDate: string, patch: Partial<DayRuleEntry>) => {
+    setDayRules((current) =>
+      current.map((entry) => (entry.isoDate === isoDate ? { ...entry, ...patch } : entry)),
+    );
+  };
+
   const applySameDateToAll = (targetDate: string) => {
     setDayRules((current) => current.map((entry) => ({ ...entry, targetDate })));
   };
 
   const applyRules = () => {
-    if (useWeeklyRules) {
-      onChange(applyRulesToSelection(config, selectedDates, weeklyRules));
-      return;
-    }
-
     onChange(applyDayRulesToConfig(config, dayRules));
   };
 
   const clearRules = () => {
     onChange(clearRulesForSelection(config, selectedDates));
     clearSelection();
+  };
+
+  const resetDayRule = (isoDate: string) => {
+    updateDayRule(isoDate, createDayRuleEntry(config.weeks, isoDate));
   };
 
   return (
@@ -142,7 +152,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
             </button>
             <div className="month-toolbar-title">
               <h2>{formatMonthLabel(year, month)}</h2>
-              <p>Click days to select · Shift+click for a range</p>
+              <p>Click days to select · Shift+click for a range · W1–W6 selects a week</p>
             </div>
             <input
               className="month-picker"
@@ -233,94 +243,133 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
               </div>
             ))}
           </div>
+
+          <p className="admin-note calendar-legend">
+            Green dots = dates that already have rules saved. Blue highlight = your current selection.
+          </p>
         </div>
 
         <aside className="calendar-panel">
-          <h3>Set rules for selected days</h3>
+          <h3>Day rules</h3>
           {selectedDates.length === 0 ? (
             <p className="admin-note">
-              Click one or more dates on the calendar. Each selected day gets its own rule for which appointment date
-              to offer.
+              Select one or more dates on the calendar. For each day you pick, you can set which appointment date
+              agents should offer when a call comes in that day.
             </p>
           ) : (
             <>
-              <p className="calendar-selection-summary">
-                <strong>{formatSelectionLabel(selectedDates)}</strong>
-              </p>
+              <div className="calendar-panel-intro">
+                <p className="calendar-selection-summary">
+                  <strong>{formatSelectionLabel(selectedDates)}</strong>
+                  <span>{selectedDates.length} day(s) selected</span>
+                </p>
+                <p className="admin-note">
+                  Define what the widget should offer when a customer calls on each selected day.
+                </p>
+              </div>
 
               {selectedDates.length > 1 && (
                 <label className="calendar-bulk-field">
-                  <span>Same offer date for all selected days</span>
-                  <input
-                    type="date"
-                    onChange={(event) => applySameDateToAll(event.target.value)}
-                  />
+                  <span>Apply the same offer date to every selected day</span>
+                  <input type="date" onChange={(event) => applySameDateToAll(event.target.value)} />
                 </label>
               )}
 
-              {selectedDates.length > 7 && (
-                <label className="calendar-mode-toggle">
-                  <input
-                    type="checkbox"
-                    checked={useWeeklyRules}
-                    onChange={(event) => setUseWeeklyRules(event.target.checked)}
-                  />
-                  Use weekly call-type rules (Mon–weekend) for this large selection
-                </label>
-              )}
+              <div className="day-rule-list">
+                {dayRules.map((entry) => {
+                  const dayKey = getDayKeyFromIso(entry.isoDate);
 
-              {!useWeeklyRules ? (
-                <div className="day-rule-list">
-                  {dayRules.map((entry) => (
-                    <label key={entry.isoDate} className="day-rule-row">
-                      <span>{formatDayHeading(entry.isoDate)}</span>
-                      <input
-                        type="date"
-                        value={entry.targetDate}
-                        onChange={(event) =>
-                          setDayRules((current) =>
-                            current.map((item) =>
-                              item.isoDate === entry.isoDate
-                                ? { ...item, targetDate: event.target.value }
-                                : item,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <div className="month-rules">
-                  {RULE_TEMPLATES.map((template, index) => {
-                    const rule = weeklyRules[index];
-                    if (!rule) {
-                      return null;
-                    }
+                  return (
+                    <article key={entry.isoDate} className="day-rule-card">
+                      <header className="day-rule-card-header">
+                        <div>
+                          <span className="day-rule-call-label">When call comes in on</span>
+                          <strong>{formatDayHeading(entry.isoDate)}</strong>
+                        </div>
+                        <button
+                          type="button"
+                          className="day-rule-reset"
+                          onClick={() => resetDayRule(entry.isoDate)}
+                        >
+                          Reset
+                        </button>
+                      </header>
 
-                    return (
-                      <label key={rule.id} className="month-rule">
-                        <span>{template.label}</span>
+                      <label className="day-rule-field">
+                        <span>Offer appointment on</span>
                         <input
                           type="date"
-                          value={rule.targetDate}
+                          value={entry.targetDate}
                           onChange={(event) =>
-                            setWeeklyRules((current) =>
-                              current.map((item, ruleIndex) =>
-                                ruleIndex === index ? { ...item, targetDate: event.target.value } : item,
-                              ),
-                            )
+                            updateDayRule(entry.isoDate, { targetDate: event.target.value })
                           }
                         />
                       </label>
-                    );
-                  })}
-                </div>
-              )}
+
+                      <label className="day-rule-field">
+                        <span>Call time window</span>
+                        <select
+                          value={timeConditionKey(entry)}
+                          onChange={(event) => {
+                            const option = TIME_CONDITION_OPTIONS.find(
+                              (item) => `${item.value}:${item.time ?? ""}` === event.target.value,
+                            );
+                            if (!option) {
+                              return;
+                            }
+
+                            updateDayRule(entry.isoDate, {
+                              timeCondition: option.value,
+                              time: option.time,
+                            });
+                          }}
+                        >
+                          {TIME_CONDITION_OPTIONS.map((option) => (
+                            <option
+                              key={`${option.value}:${option.time ?? ""}`}
+                              value={`${option.value}:${option.time ?? ""}`}
+                            >
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <div className="day-rule-field">
+                        <span>Appointment slots (optional)</span>
+                        <div className="slot-checkboxes day-rule-slots">
+                          {SLOT_OPTIONS.map((slot) => (
+                            <label key={slot.value}>
+                              <input
+                                type="checkbox"
+                                checked={entry.slots?.includes(slot.value) ?? false}
+                                onChange={() => {
+                                  const currentSlots = entry.slots ?? [];
+                                  const slots = currentSlots.includes(slot.value)
+                                    ? currentSlots.filter((value) => value !== slot.value)
+                                    : [...currentSlots, slot.value];
+
+                                  updateDayRule(entry.isoDate, {
+                                    slots: slots.length > 0 ? slots : undefined,
+                                  });
+                                }}
+                              />
+                              {slot.label}
+                            </label>
+                          ))}
+                        </div>
+                        <span className="day-rule-hint">
+                          Leave unchecked to use default {DAY_LABELS[dayKey]} slots from Business Hours.
+                        </span>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
 
               <div className="admin-actions calendar-panel-actions">
                 <button type="button" className="admin-button primary" onClick={applyRules}>
-                  Save rules
+                  Save rules for selected days
                 </button>
                 <button type="button" className="admin-button danger" onClick={clearRules}>
                   Clear rules

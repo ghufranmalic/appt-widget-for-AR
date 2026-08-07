@@ -544,9 +544,89 @@ body {
 .day-rule-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: 360px;
+  gap: 12px;
+  max-height: 520px;
   overflow-y: auto;
+  margin-top: 12px;
+}
+
+.day-rule-card {
+  border: 1px solid #c9dcff;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-rule-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.day-rule-call-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.day-rule-card-header strong {
+  color: var(--blazeo-navy);
+  font-size: 0.95rem;
+}
+
+.day-rule-reset {
+  border: 0;
+  background: transparent;
+  color: var(--blazeo-blue);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.day-rule-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.day-rule-field > span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.day-rule-field input[type="date"],
+.day-rule-field select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  width: 100%;
+}
+
+.day-rule-slots {
+  margin-top: 2px;
+}
+
+.day-rule-hint {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.calendar-panel-intro {
+  margin-bottom: 8px;
+}
+
+.calendar-legend {
+  margin-top: 12px;
+  margin-bottom: 0;
 }
 
 .day-rule-row {

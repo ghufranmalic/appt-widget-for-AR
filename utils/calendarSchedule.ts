@@ -1,4 +1,4 @@
-import type { DayKey, ScheduleConfig, ScheduleRule, WeekSchedule } from "../types/schedule";
+import type { DayKey, ScheduleConfig, ScheduleRule, TimeCondition, WeekSchedule } from "../types/schedule";
 import { createRuleId, createWeekId, DAY_INDEX_TO_KEY } from "./scheduleConstants";
 import { addDays, formatWeekLabel } from "./weekSchedule";
 import { RULE_TEMPLATES } from "./monthSchedule";
@@ -219,6 +219,9 @@ export function loadRulesForSelection(weeks: WeekSchedule[], selectedDates: stri
 export interface DayRuleEntry {
   isoDate: string;
   targetDate: string;
+  timeCondition: TimeCondition;
+  time?: string;
+  slots?: string[];
 }
 
 export function getDayKeyFromIso(isoDate: string): DayKey {
@@ -235,19 +238,34 @@ export function formatDayHeading(isoDate: string): string {
   }).format(new Date(`${isoDate}T12:00:00`));
 }
 
-export function loadDayRuleEntries(weeks: WeekSchedule[], selectedDates: string[]): DayRuleEntry[] {
-  return [...selectedDates].sort().map((isoDate) => {
-    const week = findWeekForDate(weeks, isoDate);
-    const dayKey = getDayKeyFromIso(isoDate);
-    const rule =
-      week?.rules.find((item) => item.days.includes(dayKey) && item.timeCondition === "all") ??
-      week?.rules[0];
+function defaultTimeConditionForDay(dayKey: DayKey): { timeCondition: TimeCondition; time?: string } {
+  if (dayKey === "friday") {
+    return { timeCondition: "before", time: "17:00" };
+  }
 
-    return {
-      isoDate,
-      targetDate: rule?.targetDate ?? addDays(isoDate, 1),
-    };
-  });
+  return { timeCondition: "all" };
+}
+
+export function createDayRuleEntry(weeks: WeekSchedule[], isoDate: string): DayRuleEntry {
+  const week = findWeekForDate(weeks, isoDate);
+  const dayKey = getDayKeyFromIso(isoDate);
+  const rule =
+    week?.rules.find((item) => item.days.includes(dayKey)) ??
+    week?.rules.find((item) => item.timeCondition === "all") ??
+    week?.rules[0];
+  const defaults = defaultTimeConditionForDay(dayKey);
+
+  return {
+    isoDate,
+    targetDate: rule?.targetDate ?? addDays(isoDate, 1),
+    timeCondition: rule?.timeCondition ?? defaults.timeCondition,
+    time: rule?.time ?? defaults.time,
+    slots: rule?.slots ? [...rule.slots] : undefined,
+  };
+}
+
+export function loadDayRuleEntries(weeks: WeekSchedule[], selectedDates: string[]): DayRuleEntry[] {
+  return [...selectedDates].sort().map((isoDate) => createDayRuleEntry(weeks, isoDate));
 }
 
 export function applyDayRulesToConfig(config: ScheduleConfig, entries: DayRuleEntry[]): ScheduleConfig {
@@ -256,6 +274,21 @@ export function applyDayRulesToConfig(config: ScheduleConfig, entries: DayRuleEn
 
   const newWeeks: WeekSchedule[] = entries.map((entry) => {
     const dayKey = getDayKeyFromIso(entry.isoDate);
+    const rule: ScheduleRule = {
+      id: createRuleId(),
+      label: `Calls on ${formatDayHeading(entry.isoDate)}`,
+      days: [dayKey],
+      timeCondition: entry.timeCondition,
+      targetDate: entry.targetDate,
+    };
+
+    if (entry.time) {
+      rule.time = entry.time;
+    }
+
+    if (entry.slots?.length) {
+      rule.slots = entry.slots;
+    }
 
     return {
       id: createWeekId(),
@@ -263,15 +296,7 @@ export function applyDayRulesToConfig(config: ScheduleConfig, entries: DayRuleEn
       startDate: entry.isoDate,
       endDate: entry.isoDate,
       dates: [entry.isoDate],
-      rules: [
-        {
-          id: createRuleId(),
-          label: `Calls on ${formatDayHeading(entry.isoDate)}`,
-          days: [dayKey],
-          timeCondition: "all",
-          targetDate: entry.targetDate,
-        },
-      ],
+      rules: [rule],
     };
   });
 

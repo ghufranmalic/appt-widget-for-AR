@@ -255,7 +255,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
             <div className="calendar-panel-empty">
               <p className="admin-note">
                 <strong>How it works:</strong> pick a date on the calendar, then choose which appointment date the
-                widget should offer when a customer calls on that day.
+                widget should offer when visitors come on that day.
               </p>
               <ol className="calendar-steps">
                 <li>Click a day on the calendar (blue highlight)</li>
@@ -268,7 +268,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
               <div className="calendar-how-to">
                 <strong>Set the rule for each selected day below.</strong>
                 <p>
-                  Example: if someone calls on <em>{formatDayHeading(selectedDates[0])}</em>, which appointment date
+                  Example: if visitors come on <em>{formatDayHeading(selectedDates[0])}</em>, which appointment date
                   should agents offer?
                 </p>
               </div>
@@ -295,7 +295,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
                     <article key={entry.isoDate} className="day-rule-card">
                       <div className="day-rule-flow">
                         <div className="day-rule-flow-step">
-                          <span className="day-rule-step-label">If call comes in on</span>
+                          <span className="day-rule-step-label">If visitors come on</span>
                           <strong>{formatDayHeading(entry.isoDate)}</strong>
                         </div>
                         <div className="day-rule-flow-arrow" aria-hidden="true">
@@ -314,7 +314,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
                       </div>
 
                       <p className="day-rule-preview">
-                        Widget will offer <strong>{formatDayHeading(entry.targetDate)}</strong> when calls come in on{" "}
+                        Widget will offer <strong>{formatDayHeading(entry.targetDate)}</strong> when visitors come on{" "}
                         <strong>{formatDayHeading(entry.isoDate)}</strong>.
                       </p>
 
@@ -322,7 +322,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
                         <summary>More options (time window &amp; slots)</summary>
 
                         <label className="day-rule-field">
-                          <span>Call time window</span>
+                          <span>Visitor time window</span>
                           <select
                             value={timeConditionKey(entry)}
                             onChange={(event) => {

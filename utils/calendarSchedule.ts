@@ -276,7 +276,7 @@ export function applyDayRulesToConfig(config: ScheduleConfig, entries: DayRuleEn
     const dayKey = getDayKeyFromIso(entry.isoDate);
     const rule: ScheduleRule = {
       id: createRuleId(),
-      label: `Calls on ${formatDayHeading(entry.isoDate)}`,
+      label: `Visitors on ${formatDayHeading(entry.isoDate)}`,
       days: [dayKey],
       timeCondition: entry.timeCondition,
       targetDate: entry.targetDate,

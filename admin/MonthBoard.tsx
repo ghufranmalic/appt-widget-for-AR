@@ -71,7 +71,7 @@ export function MonthScheduleBoard({ config, onChange }: MonthScheduleBoardProps
       </div>
 
       <p className="admin-note">
-        Set the appointment date agents should offer for each call type. Changes apply to this month only.
+        Set the appointment date agents should offer for each visitor type. Changes apply to this month only.
         Pick a date under each row — Monday through weekend.
       </p>
 

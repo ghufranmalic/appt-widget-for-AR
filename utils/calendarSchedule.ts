@@ -1,5 +1,5 @@
-import type { ScheduleConfig, ScheduleRule, WeekSchedule } from "../types/schedule";
-import { createRuleId, createWeekId } from "./scheduleConstants";
+import type { DayKey, ScheduleConfig, ScheduleRule, WeekSchedule } from "../types/schedule";
+import { createRuleId, createWeekId, DAY_INDEX_TO_KEY } from "./scheduleConstants";
 import { addDays, formatWeekLabel } from "./weekSchedule";
 import { RULE_TEMPLATES } from "./monthSchedule";
 
@@ -207,9 +207,78 @@ export function clearRulesForSelection(config: ScheduleConfig, selectedDates: st
 }
 
 export function loadRulesForSelection(weeks: WeekSchedule[], selectedDates: string[]): ScheduleRule[] {
-  const anchor = [...selectedDates].sort()[0] ?? getCurrentYearMonth();
+  const anchor = [...selectedDates].sort()[0];
+  if (!anchor) {
+    return [];
+  }
+
   const existing = findWeekForDate(weeks, anchor);
   return existing?.rules ?? createDefaultRules(anchor);
+}
+
+export interface DayRuleEntry {
+  isoDate: string;
+  targetDate: string;
+}
+
+export function getDayKeyFromIso(isoDate: string): DayKey {
+  const dayIndex = new Date(`${isoDate}T12:00:00`).getDay();
+  return DAY_INDEX_TO_KEY[dayIndex];
+}
+
+export function formatDayHeading(isoDate: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "America/New_York",
+  }).format(new Date(`${isoDate}T12:00:00`));
+}
+
+export function loadDayRuleEntries(weeks: WeekSchedule[], selectedDates: string[]): DayRuleEntry[] {
+  return [...selectedDates].sort().map((isoDate) => {
+    const week = findWeekForDate(weeks, isoDate);
+    const dayKey = getDayKeyFromIso(isoDate);
+    const rule =
+      week?.rules.find((item) => item.days.includes(dayKey) && item.timeCondition === "all") ??
+      week?.rules[0];
+
+    return {
+      isoDate,
+      targetDate: rule?.targetDate ?? addDays(isoDate, 1),
+    };
+  });
+}
+
+export function applyDayRulesToConfig(config: ScheduleConfig, entries: DayRuleEntry[]): ScheduleConfig {
+  const dates = entries.map((entry) => entry.isoDate);
+  const cleared = config.weeks.filter((week) => !dates.some((isoDate) => weekContainsDate(week, isoDate)));
+
+  const newWeeks: WeekSchedule[] = entries.map((entry) => {
+    const dayKey = getDayKeyFromIso(entry.isoDate);
+
+    return {
+      id: createWeekId(),
+      label: formatDayHeading(entry.isoDate),
+      startDate: entry.isoDate,
+      endDate: entry.isoDate,
+      dates: [entry.isoDate],
+      rules: [
+        {
+          id: createRuleId(),
+          label: `Calls on ${formatDayHeading(entry.isoDate)}`,
+          days: [dayKey],
+          timeCondition: "all",
+          targetDate: entry.targetDate,
+        },
+      ],
+    };
+  });
+
+  return {
+    ...config,
+    weeks: [...cleared, ...newWeeks].sort((left, right) => left.startDate.localeCompare(right.startDate)),
+  };
 }
 
 export { RULE_TEMPLATES };

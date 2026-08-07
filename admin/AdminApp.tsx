@@ -3,12 +3,11 @@ import { useEffect, useState } from "react";
 import type { ScheduleConfig } from "../types/schedule";
 import { DAY_KEYS, DAY_LABELS, SLOT_OPTIONS } from "../utils/scheduleConstants";
 import {
-  clearScheduleOverride,
   downloadScheduleConfig,
   getDefaultScheduleConfig,
-  hasScheduleOverride,
+  isPublishConfigured,
   loadScheduleConfig,
-  saveScheduleToBrowser,
+  publishSchedule,
 } from "../utils/scheduleConfig";
 import { CalendarBoard } from "./CalendarBoard";
 
@@ -20,44 +19,38 @@ export function AdminApp() {
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error" | "">("");
   const [loading, setLoading] = useState(true);
-  const [usingLocalSchedule, setUsingLocalSchedule] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadScheduleConfig().then((loaded) => {
+    loadScheduleConfig(true).then((loaded) => {
       if (loaded) {
         setConfig(loaded);
-        setUsingLocalSchedule(hasScheduleOverride());
       }
       setLoading(false);
     });
   }, []);
 
-  const updateConfig = (
-    updater: ScheduleConfig | ((current: ScheduleConfig) => ScheduleConfig),
-    message = "Schedule saved and applied to the widget.",
+  const saveToLiveWidget = async (
+    nextConfig: ScheduleConfig,
+    message = "Schedule saved. The live widget updates worldwide in about 1-2 minutes.",
   ) => {
-    const next = typeof updater === "function" ? updater(config) : updater;
-    const updated = { ...next, updatedAt: new Date().toISOString() };
-    saveScheduleToBrowser(updated);
-    setConfig(updated);
-    setUsingLocalSchedule(true);
-    setStatus(message);
-    setStatusType("success");
-  };
+    const updated = { ...nextConfig, updatedAt: new Date().toISOString() };
 
-  const handleResetToLive = async () => {
-    clearScheduleOverride();
-    const loaded = await loadScheduleConfig(true);
-    if (loaded) {
-      setConfig(loaded);
-      setUsingLocalSchedule(false);
-      setStatus("Loaded the live schedule from schedule.json.");
+    setSaving(true);
+    setStatus("Saving to live widget...");
+    setStatusType("");
+
+    try {
+      await publishSchedule(updated);
+      setConfig(updated);
+      setStatus(message);
       setStatusType("success");
-      return;
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to save schedule.");
+      setStatusType("error");
+    } finally {
+      setSaving(false);
     }
-
-    setStatus("Could not load schedule.json. Using defaults.");
-    setStatusType("error");
   };
 
   if (loading) {
@@ -107,20 +100,23 @@ export function AdminApp() {
           <button type="button" className="admin-button secondary" onClick={() => downloadScheduleConfig(config)}>
             Download schedule.json
           </button>
-          <button type="button" className="admin-button secondary" onClick={handleResetToLive}>
-            Reset to live schedule
-          </button>
         </div>
         <p className="admin-note admin-toolbar-note">
-          {usingLocalSchedule
-            ? "Your changes are saved in this browser and applied to the widget automatically."
-            : "Showing the live schedule from schedule.json."}
+          {isPublishConfigured()
+            ? "Saving applies changes to the live widget for all visitors."
+            : "Live publish is not enabled on this build yet."}
         </p>
       </div>
 
       {status && <div className={`admin-status ${statusType}`}>{status}</div>}
 
-      {tab === "weeks" && <CalendarBoard config={config} onChange={updateConfig} />}
+      {tab === "weeks" && (
+        <CalendarBoard
+          config={config}
+          onChange={(next) => saveToLiveWidget(next)}
+          saving={saving}
+        />
+      )}
 
       {tab === "hours" && (
         <section className="admin-card">
@@ -136,8 +132,9 @@ export function AdminApp() {
                   <input
                     type="checkbox"
                     checked={Boolean(config.businessHours[day].closed)}
+                    disabled={saving}
                     onChange={(event) =>
-                      updateConfig((current) => ({
+                      setConfig((current) => ({
                         ...current,
                         businessHours: {
                           ...current.businessHours,
@@ -151,9 +148,9 @@ export function AdminApp() {
                 <input
                   type="time"
                   value={config.businessHours[day].open}
-                  disabled={config.businessHours[day].closed}
+                  disabled={config.businessHours[day].closed || saving}
                   onChange={(event) =>
-                    updateConfig((current) => ({
+                    setConfig((current) => ({
                       ...current,
                       businessHours: {
                         ...current.businessHours,
@@ -165,9 +162,9 @@ export function AdminApp() {
                 <input
                   type="time"
                   value={config.businessHours[day].close}
-                  disabled={config.businessHours[day].closed}
+                  disabled={config.businessHours[day].closed || saving}
                   onChange={(event) =>
-                    updateConfig((current) => ({
+                    setConfig((current) => ({
                       ...current,
                       businessHours: {
                         ...current.businessHours,
@@ -192,8 +189,9 @@ export function AdminApp() {
                       <input
                         type="checkbox"
                         checked={config.defaultSlots[day].includes(slot.value)}
+                        disabled={saving}
                         onChange={() =>
-                          updateConfig((current) => {
+                          setConfig((current) => {
                             const currentSlots = current.defaultSlots[day];
                             const slots = currentSlots.includes(slot.value)
                               ? currentSlots.filter((value) => value !== slot.value)
@@ -212,6 +210,17 @@ export function AdminApp() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="admin-actions" style={{ marginTop: 16 }}>
+            <button
+              type="button"
+              className="admin-button primary"
+              disabled={saving}
+              onClick={() => saveToLiveWidget(config, "Business hours saved to the live widget.")}
+            >
+              {saving ? "Saving..." : "Save business hours"}
+            </button>
           </div>
 
           <p className="admin-note" style={{ marginTop: 16 }}>

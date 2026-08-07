@@ -34,6 +34,9 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_SCHEDULE_PUBLISH_TOKEN: ${{ secrets.SCHEDULE_PUBLISH_TOKEN }}
+          VITE_GITHUB_REPO: ghufranmalic/appt-widget-for-AR
 
       - name: Move built entry to Pages root
         run: |

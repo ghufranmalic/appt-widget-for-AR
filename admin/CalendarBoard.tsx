@@ -22,7 +22,8 @@ import { DAY_LABELS, SLOT_OPTIONS } from "../utils/scheduleConstants";
 
 interface CalendarBoardProps {
   config: ScheduleConfig;
-  onChange: (config: ScheduleConfig) => void;
+  onChange: (config: ScheduleConfig) => void | Promise<void>;
+  saving?: boolean;
 }
 
 const WEEKDAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -38,7 +39,7 @@ function timeConditionKey(entry: DayRuleEntry): string {
   return `${entry.timeCondition}:${entry.time ?? ""}`;
 }
 
-export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
+export function CalendarBoard({ config, onChange, saving = false }: CalendarBoardProps) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentYearMonth);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [lastClicked, setLastClicked] = useState<string | null>(null);
@@ -260,7 +261,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
               <ol className="calendar-steps">
                 <li>Click a day on the calendar (blue highlight)</li>
                 <li>Set the <strong>offer date</strong> in the panel that appears here</li>
-                <li>Click <strong>Save rules</strong>, then go to <strong>Publish</strong></li>
+                <li>Click <strong>Save rules</strong> to push changes to the live widget</li>
               </ol>
             </div>
           ) : (
@@ -392,15 +393,15 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
               </div>
 
               <div className="admin-actions calendar-panel-actions">
-                <button type="button" className="admin-button primary" onClick={applyRules}>
-                  Save rules
+                <button type="button" className="admin-button primary" onClick={applyRules} disabled={saving}>
+                  {saving ? "Saving..." : "Save rules"}
                 </button>
-                <button type="button" className="admin-button danger" onClick={clearRules}>
+                <button type="button" className="admin-button danger" onClick={clearRules} disabled={saving}>
                   Clear rules
                 </button>
               </div>
               <p className="admin-note calendar-save-note">
-                Changes apply to the widget automatically when you click Save rules.
+                Saving updates the live widget for all visitors worldwide (about 1-2 minutes to deploy).
               </p>
             </>
           )}

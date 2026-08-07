@@ -27,6 +27,8 @@ export interface NextAppointmentDay {
   severity: BookingSeverity;
   reason: string;
   agentNote?: string;
+  targetDate?: string;
+  slots?: AppointmentSlot[];
 }
 
 export interface AppointmentSlot {

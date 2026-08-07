@@ -1,8 +1,10 @@
 import * as React from "react";
 import { useMemo } from "react";
-import type { BookingSeverity, NextAppointmentDay } from "./types";
+import type { AppointmentSlot, BookingSeverity, NextAppointmentDay } from "./types";
 import { useTimeET } from "./utils/time";
-import { getAgentMessage, getNextAppointmentDay, getSlots } from "./utils/rules";
+import { getAgentMessage } from "./utils/rules";
+import { getAgentMessageFromSchedule, resolveBusinessStatus, resolveNextAppointmentDay } from "./utils/scheduleEngine";
+import { useScheduleConfig } from "./utils/useScheduleConfig";
 
 const severityLabels: Record<BookingSeverity, string> = {
   normal: "Normal booking",
@@ -41,7 +43,7 @@ function getStatusDot(severity: BookingSeverity): string {
 }
 
 function RecommendationPanel({ next }: { next: NextAppointmentDay }) {
-  const slots = getSlots(next.dayIndex);
+  const slots: AppointmentSlot[] = next.slots ?? [];
 
   return (
     <section style={styles.section} aria-labelledby="appointment-recommendation-title">
@@ -70,9 +72,20 @@ function RecommendationPanel({ next }: { next: NextAppointmentDay }) {
 }
 
 export function AppointmentWidget() {
-  const current = useTimeET();
-  const next = useMemo(() => getNextAppointmentDay(current), [current]);
-  const agentMessage = useMemo(() => getAgentMessage(next), [next]);
+  const scheduleConfig = useScheduleConfig();
+  const currentBase = useTimeET();
+  const current = useMemo(
+    () => ({
+      ...currentBase,
+      businessStatus: resolveBusinessStatus(currentBase, scheduleConfig),
+    }),
+    [currentBase, scheduleConfig],
+  );
+  const next = useMemo(() => resolveNextAppointmentDay(current, scheduleConfig), [current, scheduleConfig]);
+  const agentMessage = useMemo(
+    () => (next.slots ? getAgentMessageFromSchedule(next) : getAgentMessage(next)),
+    [next],
+  );
   const severityStyle = severityStyles[next.severity];
 
   return (

@@ -16,5 +16,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["AppointmentWidget.tsx", "types.ts", "utils", "src"]
+  "include": ["AppointmentWidget.tsx", "types.ts", "types", "utils", "admin", "src"]
 }

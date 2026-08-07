@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-07T18:55:19.047Z",
+  "updatedAt": "2026-08-07T21:29:23.868Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -50,7 +50,6 @@
       "18:00"
     ],
     "tuesday": [
-      "10:00",
       "14:00",
       "18:00"
     ],
@@ -65,7 +64,9 @@
       "18:00"
     ],
     "friday": [
-      "18:00"
+      "18:00",
+      "10:00",
+      "14:00"
     ],
     "saturday": []
   },

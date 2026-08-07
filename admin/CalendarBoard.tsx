@@ -400,7 +400,7 @@ export function CalendarBoard({ config, onChange }: CalendarBoardProps) {
                 </button>
               </div>
               <p className="admin-note calendar-save-note">
-                After saving, open the <strong>Publish</strong> tab to push changes to the live widget.
+                Changes apply to the widget automatically when you click Save rules.
               </p>
             </>
           )}

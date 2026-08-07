@@ -2,9 +2,39 @@ import type { ScheduleConfig } from "../types/schedule";
 import { createDefaultScheduleConfig } from "./defaultSchedule";
 
 const SCHEDULE_URL = `${import.meta.env.BASE_URL}schedule.json`;
+const SCHEDULE_LOCAL_KEY = "blazeo-schedule-config";
 
 let cachedConfig: ScheduleConfig | null = null;
 let loadPromise: Promise<ScheduleConfig | null> | null = null;
+
+function readScheduleFromBrowser(): ScheduleConfig | null {
+  try {
+    const raw = localStorage.getItem(SCHEDULE_LOCAL_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    return JSON.parse(raw) as ScheduleConfig;
+  } catch {
+    return null;
+  }
+}
+
+export function saveScheduleToBrowser(config: ScheduleConfig): void {
+  const payload = { ...config, updatedAt: new Date().toISOString() };
+  localStorage.setItem(SCHEDULE_LOCAL_KEY, JSON.stringify(payload));
+  cachedConfig = payload;
+}
+
+export function hasScheduleOverride(): boolean {
+  return Boolean(localStorage.getItem(SCHEDULE_LOCAL_KEY));
+}
+
+export function clearScheduleOverride(): void {
+  localStorage.removeItem(SCHEDULE_LOCAL_KEY);
+  cachedConfig = null;
+  loadPromise = null;
+}
 
 export async function loadScheduleConfig(force = false): Promise<ScheduleConfig | null> {
   if (!force && cachedConfig) {
@@ -15,19 +45,33 @@ export async function loadScheduleConfig(force = false): Promise<ScheduleConfig 
     return loadPromise;
   }
 
+  const localConfig = readScheduleFromBrowser();
+  if (localConfig && !force) {
+    cachedConfig = localConfig;
+    return localConfig;
+  }
+
   loadPromise = (async () => {
     try {
       const response = await fetch(`${SCHEDULE_URL}?v=${Date.now()}`, { cache: "no-store" });
 
       if (!response.ok) {
-        return null;
+        return localConfig;
       }
 
-      const config = (await response.json()) as ScheduleConfig;
-      cachedConfig = config;
-      return config;
+      const remoteConfig = (await response.json()) as ScheduleConfig;
+      const remoteUpdated = Date.parse(remoteConfig.updatedAt);
+      const localUpdated = localConfig ? Date.parse(localConfig.updatedAt) : 0;
+
+      if (localConfig && localUpdated > remoteUpdated) {
+        cachedConfig = localConfig;
+        return localConfig;
+      }
+
+      cachedConfig = remoteConfig;
+      return remoteConfig;
     } catch {
-      return null;
+      return localConfig;
     } finally {
       loadPromise = null;
     }
@@ -42,56 +86,6 @@ export function getCachedScheduleConfig(): ScheduleConfig | null {
 
 export function getDefaultScheduleConfig(): ScheduleConfig {
   return createDefaultScheduleConfig();
-}
-
-export async function publishScheduleToGitHub(
-  config: ScheduleConfig,
-  token: string,
-  repo = "ghufranmalic/appt-widget-for-AR",
-): Promise<void> {
-  const payload = JSON.stringify(config, null, 2);
-  const paths = ["public/schedule.json", "schedule.json"];
-
-  for (const path of paths) {
-    await publishFileToGitHub(path, payload, token, repo);
-  }
-}
-
-async function publishFileToGitHub(
-  path: string,
-  content: string,
-  token: string,
-  repo: string,
-): Promise<void> {
-  const encoded = btoa(unescape(encodeURIComponent(content)));
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    Accept: "application/vnd.github+json",
-    "Content-Type": "application/json",
-  };
-
-  const existingResponse = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { headers });
-  let sha: string | undefined;
-
-  if (existingResponse.ok) {
-    const existing = (await existingResponse.json()) as { sha: string };
-    sha = existing.sha;
-  }
-
-  const response = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify({
-      message: "Update appointment schedule from Blazeo admin",
-      content: encoded,
-      sha,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `Failed to publish ${path} to GitHub.`);
-  }
 }
 
 export function downloadScheduleConfig(config: ScheduleConfig): void {

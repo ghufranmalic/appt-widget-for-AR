@@ -90,7 +90,31 @@ body {
 .admin-tabs {
   display: flex;
   gap: 8px;
+  margin-bottom: 12px;
+}
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
   margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.admin-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-toolbar-note {
+  margin: 0;
+  max-width: 420px;
 }
 
 .admin-tab {

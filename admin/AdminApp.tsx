@@ -1,76 +1,63 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import type { ScheduleConfig } from "../types/schedule";
-import { createDefaultScheduleConfig } from "../utils/defaultSchedule";
 import { DAY_KEYS, DAY_LABELS, SLOT_OPTIONS } from "../utils/scheduleConstants";
 import {
+  clearScheduleOverride,
   downloadScheduleConfig,
   getDefaultScheduleConfig,
+  hasScheduleOverride,
   loadScheduleConfig,
-  publishScheduleToGitHub,
+  saveScheduleToBrowser,
 } from "../utils/scheduleConfig";
-import {
-  clearAdminSettings,
-  hasSavedGitHubToken,
-  loadAdminSettings,
-  saveAdminSettings,
-} from "../utils/adminSettings";
 import { CalendarBoard } from "./CalendarBoard";
 
-type AdminTab = "hours" | "weeks" | "publish" | "settings";
+type AdminTab = "hours" | "weeks";
 
 export function AdminApp() {
   const [tab, setTab] = useState<AdminTab>("weeks");
   const [config, setConfig] = useState<ScheduleConfig>(() => getDefaultScheduleConfig());
-  const [settings, setSettings] = useState(() => loadAdminSettings());
-  const [tokenSaved, setTokenSaved] = useState(() => hasSavedGitHubToken());
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error" | "">("");
   const [loading, setLoading] = useState(true);
+  const [usingLocalSchedule, setUsingLocalSchedule] = useState(false);
 
   useEffect(() => {
-    loadScheduleConfig(true).then((loaded) => {
+    loadScheduleConfig().then((loaded) => {
       if (loaded) {
         setConfig(loaded);
+        setUsingLocalSchedule(hasScheduleOverride());
       }
       setLoading(false);
     });
   }, []);
 
-  const updateConfig = (updater: ScheduleConfig | ((current: ScheduleConfig) => ScheduleConfig)) => {
-    setConfig((current) => {
-      const next = typeof updater === "function" ? updater(current) : updater;
-      return { ...next, updatedAt: new Date().toISOString() };
-    });
-  };
-
-  const handleSaveSettings = () => {
-    saveAdminSettings(settings);
-    setTokenSaved(hasSavedGitHubToken());
-    setStatus("GitHub settings saved in this browser. You will not need to enter the token again.");
+  const updateConfig = (
+    updater: ScheduleConfig | ((current: ScheduleConfig) => ScheduleConfig),
+    message = "Schedule saved and applied to the widget.",
+  ) => {
+    const next = typeof updater === "function" ? updater(config) : updater;
+    const updated = { ...next, updatedAt: new Date().toISOString() };
+    saveScheduleToBrowser(updated);
+    setConfig(updated);
+    setUsingLocalSchedule(true);
+    setStatus(message);
     setStatusType("success");
   };
 
-  const handlePublish = async () => {
-    setStatus("");
-    setStatusType("");
-    const saved = loadAdminSettings();
-
-    if (!saved.githubToken.trim()) {
-      downloadScheduleConfig(config);
-      setStatus("No saved GitHub token. Downloaded schedule.json — save your token under Settings for one-click publish.");
-      setStatusType("error");
+  const handleResetToLive = async () => {
+    clearScheduleOverride();
+    const loaded = await loadScheduleConfig(true);
+    if (loaded) {
+      setConfig(loaded);
+      setUsingLocalSchedule(false);
+      setStatus("Loaded the live schedule from schedule.json.");
+      setStatusType("success");
       return;
     }
 
-    try {
-      await publishScheduleToGitHub(config, saved.githubToken, saved.githubRepo);
-      setStatus("Schedule published to GitHub. The widget will update after Pages deploys (about 1-2 minutes).");
-      setStatusType("success");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Publish failed.");
-      setStatusType("error");
-    }
+    setStatus("Could not load schedule.json. Using defaults.");
+    setStatusType("error");
   };
 
   if (loading) {
@@ -110,25 +97,28 @@ export function AdminApp() {
         >
           Business Hours
         </button>
-        <button
-          type="button"
-          className={`admin-tab ${tab === "publish" ? "active" : ""}`}
-          onClick={() => setTab("publish")}
-        >
-          Publish
-        </button>
-        <button
-          type="button"
-          className={`admin-tab ${tab === "settings" ? "active" : ""}`}
-          onClick={() => setTab("settings")}
-        >
-          Settings
-        </button>
       </div>
 
-      {status && tab !== "publish" && tab !== "settings" && (
-        <div className={`admin-status ${statusType}`}>{status}</div>
-      )}
+      <div className="admin-toolbar">
+        <div className="admin-toolbar-actions">
+          <a className="admin-button secondary" href={`${import.meta.env.BASE_URL}`} target="_blank" rel="noreferrer">
+            Preview widget
+          </a>
+          <button type="button" className="admin-button secondary" onClick={() => downloadScheduleConfig(config)}>
+            Download schedule.json
+          </button>
+          <button type="button" className="admin-button secondary" onClick={handleResetToLive}>
+            Reset to live schedule
+          </button>
+        </div>
+        <p className="admin-note admin-toolbar-note">
+          {usingLocalSchedule
+            ? "Your changes are saved in this browser and applied to the widget automatically."
+            : "Showing the live schedule from schedule.json."}
+        </p>
+      </div>
+
+      {status && <div className={`admin-status ${statusType}`}>{status}</div>}
 
       {tab === "weeks" && <CalendarBoard config={config} onChange={updateConfig} />}
 
@@ -223,98 +213,10 @@ export function AdminApp() {
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      {tab === "publish" && (
-        <section className="admin-card">
-          <h2>Publish to Widget</h2>
-          <p className="admin-note">
-            The widget reads <code>schedule.json</code>. Publish after updating the current or upcoming month.
-          </p>
-
-          {tokenSaved ? (
-            <p className="admin-status success">
-              GitHub token is saved in this browser. Click publish below — no need to re-enter it.
-            </p>
-          ) : (
-            <p className="admin-status error">
-              Set up your GitHub token once under the <strong>Settings</strong> tab to enable one-click publish.
-            </p>
-          )}
-
-          <div className="admin-actions" style={{ marginTop: 16 }}>
-            <button type="button" className="admin-button primary" onClick={handlePublish}>
-              Publish schedule
-            </button>
-            <button
-              type="button"
-              className="admin-button secondary"
-              onClick={() => downloadScheduleConfig(config)}
-            >
-              Download schedule.json
-            </button>
-            <a className="admin-button secondary" href={`${import.meta.env.BASE_URL}`} target="_blank" rel="noreferrer">
-              Preview widget
-            </a>
-          </div>
-
-          {status && <div className={`admin-status ${statusType}`}>{status}</div>}
 
           <p className="admin-note" style={{ marginTop: 16 }}>
             Last updated: {new Date(config.updatedAt).toLocaleString("en-US", { timeZone: "America/New_York" })} ET
           </p>
-        </section>
-      )}
-
-      {tab === "settings" && (
-        <section className="admin-card">
-          <h2>One-time GitHub setup</h2>
-          <p className="admin-note">
-            Save your GitHub token here once. It stays in this browser only (localStorage).
-          </p>
-
-          <div className="admin-token-box">
-            <div className="admin-field">
-              <label>GitHub personal access token</label>
-              <input
-                type="password"
-                value={settings.githubToken}
-                placeholder="ghp_..."
-                onChange={(event) => setSettings({ ...settings, githubToken: event.target.value })}
-              />
-              <span>Token needs <code>repo</code> scope to update schedule.json in the repository.</span>
-            </div>
-            <div className="admin-field">
-              <label>GitHub repository</label>
-              <input
-                value={settings.githubRepo}
-                onChange={(event) => setSettings({ ...settings, githubRepo: event.target.value })}
-              />
-              <span>Format: owner/repo (example: ghufranmalic/appt-widget-for-AR)</span>
-            </div>
-          </div>
-
-          <div className="admin-actions" style={{ marginTop: 16 }}>
-            <button type="button" className="admin-button primary" onClick={handleSaveSettings}>
-              Save settings
-            </button>
-            <button
-              type="button"
-              className="admin-button danger"
-              onClick={() => {
-                clearAdminSettings();
-                setSettings(loadAdminSettings());
-                setTokenSaved(false);
-                setStatus("Saved GitHub settings cleared from this browser.");
-                setStatusType("success");
-              }}
-            >
-              Clear saved token
-            </button>
-          </div>
-
-          {status && <div className={`admin-status ${statusType}`}>{status}</div>}
         </section>
       )}
     </div>

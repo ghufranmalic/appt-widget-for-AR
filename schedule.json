@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-07T21:39:15.676Z",
+  "updatedAt": "2026-08-07T21:40:47.679Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -126,72 +126,27 @@
       ]
     },
     {
-      "id": "week-1786117549054-pcpsp",
-      "label": "Aug 10 – Aug 16, 2026",
-      "startDate": "2026-08-10",
-      "endDate": "2026-08-16",
+      "id": "week-1786138847678-f78mx",
+      "label": "Tue, Aug 11",
+      "startDate": "2026-08-11",
+      "endDate": "2026-08-11",
+      "dates": [
+        "2026-08-11"
+      ],
       "rules": [
         {
-          "id": "rule-1786117549079-jwwre",
-          "label": "If Monday",
-          "days": [
-            "monday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-11",
-          "slots": [
-            "14:00",
-            "18:00"
-          ]
-        },
-        {
-          "id": "rule-1786117549079-02otz",
-          "label": "If Tuesday",
+          "id": "rule-1786138847678-9xe9q",
+          "label": "Visitors on Tue, Aug 11",
           "days": [
             "tuesday"
           ],
           "timeCondition": "all",
-          "targetDate": "2026-08-12"
-        },
-        {
-          "id": "rule-1786117549079-tvbn3",
-          "label": "If Wednesday",
-          "days": [
-            "wednesday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-13"
-        },
-        {
-          "id": "rule-1786117549079-17doz",
-          "label": "If Thursday",
-          "days": [
-            "thursday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-14"
-        },
-        {
-          "id": "rule-1786117549079-bf3be",
-          "label": "If Friday before 5pm",
-          "days": [
-            "friday"
-          ],
-          "timeCondition": "before",
-          "time": "17:00",
-          "targetDate": "2026-08-17"
-        },
-        {
-          "id": "rule-1786117549079-f9for",
-          "label": "If Friday after 5pm, Saturday, or Sunday",
-          "days": [
-            "friday",
-            "saturday",
-            "sunday"
-          ],
-          "timeCondition": "after",
-          "time": "17:00",
-          "targetDate": "2026-08-18"
+          "targetDate": "2026-08-12",
+          "slots": [
+            "10:00",
+            "14:00",
+            "18:00"
+          ]
         }
       ]
     },

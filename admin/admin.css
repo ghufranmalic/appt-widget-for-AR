@@ -76,6 +76,51 @@ body {
   text-align: right;
 }
 
+.admin-lock-button {
+  display: block;
+  margin-top: 8px;
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.admin-lock-button:hover {
+  color: var(--blazeo-blue);
+}
+
+.admin-pin-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.admin-pin-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 10px 30px rgba(10, 31, 68, 0.08);
+}
+
+.admin-pin-card h1 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+}
+
+.admin-pin-submit {
+  width: 100%;
+  margin-top: 8px;
+}
+
 .admin-client strong {
   display: block;
   font-size: 1rem;

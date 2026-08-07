@@ -9,6 +9,7 @@ import {
   loadScheduleConfig,
   publishSchedule,
 } from "../utils/scheduleConfig";
+import { lockAdmin } from "./AdminPinGate";
 import { CalendarBoard } from "./CalendarBoard";
 
 type AdminTab = "hours" | "weeks";
@@ -72,6 +73,16 @@ export function AdminApp() {
           <a href={config.business.website} target="_blank" rel="noreferrer">
             {config.business.website}
           </a>
+          <button
+            type="button"
+            className="admin-lock-button"
+            onClick={() => {
+              lockAdmin();
+              window.location.reload();
+            }}
+          >
+            Lock admin
+          </button>
         </div>
       </header>
 

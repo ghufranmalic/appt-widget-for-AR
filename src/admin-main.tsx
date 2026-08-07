@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import AdminApp from "../admin/AdminApp";
+import { AdminPinGate } from "../admin/AdminPinGate";
 
 import "../admin/admin.css";
 
@@ -12,6 +13,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <React.StrictMode>
-    <AdminApp />
+    <AdminPinGate>
+      <AdminApp />
+    </AdminPinGate>
   </React.StrictMode>,
 );

@@ -50,35 +50,24 @@ function followingBusinessDayAfterNextDay(dayIndex: number): number {
   return nextBusinessDayFrom(nextDay);
 }
 
-const TUESDAY_RESTRICTED_AGENT_NOTE =
-  "Do not offer Saturday appointments during this period.";
-
 const TUESDAY_RESTRICTED_REASON =
-  "From Friday after-hours through Monday morning, Saturday appointments are not available; skip the weekend and Monday—earliest allowed is Tuesday.";
+  "Friday, Saturday, and Sunday requests must skip the weekend and Monday; earliest allowed is Tuesday.";
+
+const MONDAY_BEFORE_OPEN_REASON =
+  "Monday before opening must skip the weekend; earliest allowed is Tuesday.";
 
 function formatSlotLabels(slots: AppointmentSlot[]): string {
   return slots.map((slot) => slot.label).join(", ");
 }
 
-function isAfterHoursFridayThroughMondayMorning(
+function shouldOfferTuesday(
   current: Pick<ETDateTimeParts, "dayIndex" | "hour" | "minute">,
 ): boolean {
-  const status = getBusinessStatus(current);
-  const isBeforeWeekdayOpening = minutesSinceMidnight(current) < WEEKDAY_OPEN_MINUTES;
-
-  if (current.dayIndex === 5) {
-    return status === "CLOSED" && !isBeforeWeekdayOpening;
-  }
-
-  if (current.dayIndex === 6 || current.dayIndex === 0) {
+  if (current.dayIndex === 5 || current.dayIndex === 6 || current.dayIndex === 0) {
     return true;
   }
 
-  if (current.dayIndex === 1) {
-    return isBeforeWeekdayOpening;
-  }
-
-  return false;
+  return current.dayIndex === 1 && minutesSinceMidnight(current) < WEEKDAY_OPEN_MINUTES;
 }
 
 export function getBusinessStatus(current: Pick<ETDateTimeParts, "dayIndex" | "hour" | "minute">): BusinessStatus {
@@ -120,17 +109,11 @@ export function getNextAppointmentDay(current: Pick<ETDateTimeParts, "dayIndex" 
   let reason: string;
   let agentNote: string | undefined;
 
-  if (isAfterHoursFridayThroughMondayMorning(current)) {
+  if (shouldOfferTuesday(current)) {
     dayIndex = 2;
     severity = "restricted";
-    reason = TUESDAY_RESTRICTED_REASON;
-    agentNote = TUESDAY_RESTRICTED_AGENT_NOTE;
-  } else if (current.dayIndex === 5) {
-    dayIndex = 6;
-    severity = "limited";
-    reason = status === "OPEN"
-      ? "Friday requests during business hours can only offer Saturday appointments."
-      : "Friday before opening can offer next-day Saturday appointments.";
+    reason =
+      current.dayIndex === 1 ? MONDAY_BEFORE_OPEN_REASON : TUESDAY_RESTRICTED_REASON;
   } else if (isNormalWeekday(current.dayIndex)) {
     if (status === "OPEN") {
       dayIndex = nextBusinessDayFrom(current.dayIndex);

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-14T22:39:55.098Z",
+  "updatedAt": "2026-08-14T22:40:18.970Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -327,68 +327,28 @@
       ]
     },
     {
-      "id": "week-1786117549080-out8a",
-      "label": "Aug 17 – Aug 22, 2026",
+      "id": "week-1786747218970-w0goo",
+      "label": "Mon, Aug 17",
       "startDate": "2026-08-17",
-      "endDate": "2026-08-22",
+      "endDate": "2026-08-17",
+      "dates": [
+        "2026-08-17"
+      ],
       "rules": [
         {
-          "id": "rule-1786117549080-w6nch",
-          "label": "If Monday",
+          "id": "rule-1786747218970-ii5ri",
+          "label": "Visitors on Mon, Aug 17",
           "days": [
             "monday"
           ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-18"
-        },
-        {
-          "id": "rule-1786117549080-cnvg6",
-          "label": "If Tuesday",
-          "days": [
-            "tuesday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-19"
-        },
-        {
-          "id": "rule-1786117549080-erskp",
-          "label": "If Wednesday",
-          "days": [
-            "wednesday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-20"
-        },
-        {
-          "id": "rule-1786117549080-jmu4j",
-          "label": "If Thursday",
-          "days": [
-            "thursday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-21"
-        },
-        {
-          "id": "rule-1786117549080-3jdxe",
-          "label": "If Friday before 5pm",
-          "days": [
-            "friday"
-          ],
-          "timeCondition": "before",
-          "time": "17:00",
-          "targetDate": "2026-08-24"
-        },
-        {
-          "id": "rule-1786117549080-ei1f9",
-          "label": "If Friday after 5pm, Saturday, or Sunday",
-          "days": [
-            "friday",
-            "saturday",
-            "sunday"
-          ],
           "timeCondition": "after",
+          "targetDate": "2026-08-19",
           "time": "17:00",
-          "targetDate": "2026-08-25"
+          "slots": [
+            "10:00",
+            "18:00",
+            "14:00"
+          ]
         }
       ]
     },

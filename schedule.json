@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-14T22:41:59.002Z",
+  "updatedAt": "2026-08-24T18:01:56.955Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -456,68 +456,22 @@
       ]
     },
     {
-      "id": "week-1786117549081-2x0hl",
-      "label": "Aug 24 – Aug 29, 2026",
+      "id": "week-1787594516954-w3l4s",
+      "label": "Mon, Aug 24",
       "startDate": "2026-08-24",
-      "endDate": "2026-08-29",
+      "endDate": "2026-08-24",
+      "dates": [
+        "2026-08-24"
+      ],
       "rules": [
         {
-          "id": "rule-1786117549082-ls3yx",
-          "label": "If Monday",
+          "id": "rule-1787594516953-bqziv",
+          "label": "Visitors on Mon, Aug 24",
           "days": [
             "monday"
           ],
           "timeCondition": "all",
-          "targetDate": "2026-08-25"
-        },
-        {
-          "id": "rule-1786117549082-wc1hz",
-          "label": "If Tuesday",
-          "days": [
-            "tuesday"
-          ],
-          "timeCondition": "all",
           "targetDate": "2026-08-26"
-        },
-        {
-          "id": "rule-1786117549082-tidy9",
-          "label": "If Wednesday",
-          "days": [
-            "wednesday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-27"
-        },
-        {
-          "id": "rule-1786117549082-mz7u3",
-          "label": "If Thursday",
-          "days": [
-            "thursday"
-          ],
-          "timeCondition": "all",
-          "targetDate": "2026-08-28"
-        },
-        {
-          "id": "rule-1786117549082-f82nr",
-          "label": "If Friday before 5pm",
-          "days": [
-            "friday"
-          ],
-          "timeCondition": "before",
-          "time": "17:00",
-          "targetDate": "2026-08-31"
-        },
-        {
-          "id": "rule-1786117549082-716rw",
-          "label": "If Friday after 5pm, Saturday, or Sunday",
-          "days": [
-            "friday",
-            "saturday",
-            "sunday"
-          ],
-          "timeCondition": "after",
-          "time": "17:00",
-          "targetDate": "2026-09-01"
         }
       ]
     }

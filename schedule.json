@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-27T03:24:36.120Z",
+  "updatedAt": "2026-08-27T03:24:56.503Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -572,6 +572,26 @@
           ],
           "timeCondition": "all",
           "targetDate": "2026-09-01"
+        }
+      ]
+    },
+    {
+      "id": "week-1787801096502-yjuds",
+      "label": "Mon, Aug 31",
+      "startDate": "2026-08-31",
+      "endDate": "2026-08-31",
+      "dates": [
+        "2026-08-31"
+      ],
+      "rules": [
+        {
+          "id": "rule-1787801096502-95bk6",
+          "label": "Visitors on Mon, Aug 31",
+          "days": [
+            "monday"
+          ],
+          "timeCondition": "all",
+          "targetDate": "2026-09-02"
         }
       ]
     }

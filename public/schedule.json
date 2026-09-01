@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-01T23:25:14.792Z",
+  "updatedAt": "2026-09-01T23:26:13.199Z",
   "business": {
     "name": "Allied Remodeling",
     "website": "https://alliedremodeling.com/",
@@ -45,11 +45,7 @@
   },
   "defaultSlots": {
     "sunday": [],
-    "monday": [
-      "14:00",
-      "18:00",
-      "10:00"
-    ],
+    "monday": [],
     "tuesday": [
       "14:00",
       "18:00",
